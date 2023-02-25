@@ -1,7 +1,16 @@
 import pyspark.sql
 from pyspark.sql import SparkSession
+from super_secret_password import PASSWORD
 
+# PYSPARK INITALIZE
+session = SparkSession.builder.appName('CLI User Interface').getOrCreate()
 
+# TODO make a password saver or something
+
+DATABASE_VALUES= {"url": "jdbc:mysql://localhost:3306/creditcard_capstone",
+                "table":["CDW_SAPP_BRANCH", "CDW_SAPP_CREDIT_CARD", "CDW_SAPP_CUSTOMER"],
+                "mode":"overwrite",
+                "properties":{"user":"root", "password":PASSWORD, "driver":"com.mysql.cj.jdbc.Driver"}}
 
 
 
@@ -47,7 +56,7 @@ def prompt_check(list_of_choices):  # return t/f
         # DEBUGGING 
         #print(selection) 
 
-        if selection < len(list_of_choices):
+        if -1 < selection < len(list_of_choices):
             print(YOU_HAVE_SELECTED.format(selection=list_of_choices[selection]))
             return list_of_choices[selection]  # return choices to select
         else:
@@ -63,14 +72,24 @@ def prompt_check(list_of_choices):  # return t/f
 
 LOGO = "--logo here--"
 WELCOME = "Welcome to -- "
-TRANSACTION_MENU = {"zipcode":"",
-                    "type":"",
-                    "state":""}
+
+# CONTAINERS FOR SQL QUERIES
+
+transaction_container_query = {"zipcode":"",
+                                "type":"",
+                                "state":"",
+                                "branches":""}
+
+
+
+
+
 
 # GENERIC PROMPTS
 
 YOU_HAVE_SELECTED_DOUBLE = "\nYou Have Selected {selection}, is that Correct?\n"
 GOODBYE = "Thank you for using, Goodbye!"
+NEWLINE = "\n"
 
 # CHOICES LIST
 
@@ -119,9 +138,37 @@ while loop:
             transaction_menu = prompt_check(list_of_choices=CHOICES_TRANSACTION)
 
             if transaction_menu == CHOICES_TRANSACTION[0]:
-                pass
+                # zipcode, # month, # year
+                print("Please enter a zipcode, a month, and a year")
+                print("Please note, only 2018 is currently a valid year")
+
+                # TODO 'q' to exit
+                    
+  
+                # TODO data validation
+
+                print("Zipcode:")
+                transaction_container_query["zipcode"] = input("> ").strip()
+                
+                print(NEWLINE)
+                
+                print("Month (first three letters):")
+                transaction_container_query["month"] = input(">")
+                print(NEWLINE)
+
+                print("Year:")
+                transaction_container_query["year"] = input(">")
+                print(NEWLINE)
 
 
+                # TODO 'are you sure?' check
+
+                sql_transaction_db = session.read.jdbc(
+                url=DATABASE_VALUES["url"],
+                table=DATABASE_VALUES["table"][1],
+                properties=DATABASE_VALUES["properties"])
+                # DEBUG
+                #print(transaction_container_query)
 
     
 
@@ -145,7 +192,7 @@ while loop:
 
 
 print(GOODBYE)
-
+session.stop()
 
 
 
