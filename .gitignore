@@ -1,3 +1,5 @@
 /ignore
 *.crc
 _SUCCESS
+PASSWORD.py
+super_secret_password.py
