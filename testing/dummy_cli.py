@@ -1,11 +1,10 @@
-import pyspark.sql
-from pyspark.sql import SparkSession
+# import pyspark.sql
+# from pyspark.sql import SparkSession
 from super_secret_password import PASSWORD
 
-import logging
 
 # PYSPARK INITALIZE
-session = SparkSession.builder.appName('CLI User Interface').getOrCreate()
+# session = SparkSession.builder.appName('CLI User Interface').getOrCreate()
 
 
 # TODO make a password saver or something
@@ -16,36 +15,36 @@ DATABASE_VALUES= {"url": "jdbc:mysql://localhost:3306/creditcard_capstone",
                 "properties":{"user":"root", "password":PASSWORD, "driver":"com.mysql.cj.jdbc.Driver"}}
 
 # LOAD UP THE TABLES AS DFS 
-sql_branch_df = session.read.jdbc(
-        url=DATABASE_VALUES["url"],
-        properties=DATABASE_VALUES["properties"],
-        table=DATABASE_VALUES["table"][0]
-    )
+# sql_branch_df = session.read.jdbc(
+#         url=DATABASE_VALUES["url"],
+#         properties=DATABASE_VALUES["properties"],
+#         table=DATABASE_VALUES["table"][0]
+#     )
 
-sql_credit_df = session.read.jdbc(
-        url=DATABASE_VALUES["url"],
-        properties=DATABASE_VALUES["properties"],
-        table=DATABASE_VALUES["table"][1]
-    )
+# sql_credit_df = session.read.jdbc(
+#         url=DATABASE_VALUES["url"],
+#         properties=DATABASE_VALUES["properties"],
+#         table=DATABASE_VALUES["table"][1]
+#     )
 
-sql_customer_df = session.read.jdbc(
-        url=DATABASE_VALUES["url"],
-        properties=DATABASE_VALUES["properties"],
-        table=DATABASE_VALUES["table"][2]
-    )
+# sql_customer_df = session.read.jdbc(
+#         url=DATABASE_VALUES["url"],
+#         properties=DATABASE_VALUES["properties"],
+#         table=DATABASE_VALUES["table"][2]
+#     )
 
 
-sql_branch_df.show(10)
-# CUSTOMER AND CREDIT 
+# sql_branch_df.show(10)
+# # CUSTOMER AND CREDIT 
 
-sql_credit_customer_df = sql_customer_df.join(sql_credit_df, sql_customer_df.SSN == sql_credit_df.CUST_SSN)
+# # sql_credit_customer_df = sql_customer_df.join(sql_credit_df, sql_customer_df.SSN == sql_credit_df.CUST_SSN)
 
-# drop un-needed columns
-sql_credit_customer_df = sql_credit_customer_df.drop('CUST_SSN')
-sql_credit_customer_df = sql_credit_customer_df.drop(sql_customer_df.CREDIT_CARD_NO)
+# # drop un-needed columns
+# sql_credit_customer_df = sql_credit_customer_df.drop('CUST_SSN')
+# sql_credit_customer_df = sql_credit_customer_df.drop(sql_customer_df.CREDIT_CARD_NO)
 
-# tempview of customer and credit
-sql_credit_customer_df = sql_credit_customer_df.createOrReplaceTempView("credit_and_customer_df")
+# # tempview of customer and credit
+# sql_credit_customer_df = sql_credit_customer_df.createOrReplaceTempView("credit_and_customer_df")
 
 
 # Functional Requirements 2.2
@@ -200,7 +199,7 @@ while loop:
 
                 
             try:
-                transaction_menu_choice_one = session.sql(f"""
+                transaction_menu_choice_one =(f"""
                     SELECT 
                         CUST_ZIP,
                         FIRST_NAME,
@@ -220,8 +219,9 @@ while loop:
                         DATE_FORMAT(TIMEID, 'MMMM') LIKE("{transaction_container_query['month']}%")
                     ORDER BY 
                     DAYOFMONTH(TIMEID) DESC; """)
+                
+                print(transaction_menu_choice_one)
                     
-                transaction_menu_choice_one.show(10)
             except:
                 print("Error")
 
@@ -236,7 +236,9 @@ while loop:
                 try:
                     selection = int(selection)
                     if type(selection) == int and selection > 0:
-                        transaction_menu_choice_one.show(selection)
+                        print(transaction_menu_choice_one)
+                        print(f"printing {selection} rows")
+
                 except ValueError:
                     pass
 
