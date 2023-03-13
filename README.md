@@ -9,10 +9,14 @@ It highlights many of the skills and technologies I've known previously and have
 
 ### The Data Set & Workflow:
 ---
-The Data-set is generated data representing that of a bank.
-The data consists of several large .JSON Files, and an API endpoint. 
+The Data-set is generated data representing that of a bank. <br>
+The data consists of several large .JSON Files, and an API endpoint. <br> 
 The data represents customer information, branch information, transaction history, as well as data pertaining to individuals applying for bank loans.
 
+<div align="center">
+<img src="https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/main/images/capstone_workflow_process.jpg" width=720px>
+</div>
+  
 ### The Project Components:
 ---
 The capstone is divided into several components: 
