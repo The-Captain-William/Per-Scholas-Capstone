@@ -94,8 +94,8 @@ While I satisfied all of the requirements to land a perfect score on my capstone
 
 
 ETL
-- [ ] 🛠 Create the SQL database through mysql.connector instead of pyspark.sql, allowing for more precise data types
-- [ ] ↗ `#1` Rewrite all jupyter notebooks code, making  the pyspark.sql ETL process easier to read and more efficient 
+- [X] Create the SQL database through mysql.connector instead of pyspark.sql, allowing for more precise data types 
+- [ ] 🛠 `#1` Rewrite all jupyter notebooks code, making  the pyspark.sql ETL process easier to read and more efficient 
 - [ ] Copy MariaDB SQL database to a SQLite serverless database so users can view the finished product and interact with the front-ends with less work
 - [ ] Compare the speeds of running pyspark.sql locally (using a single node) for the full ETL process with running pandas and discuss the appropriate use of each tool
 - [ ] introduce the <a href="https://github.com/pola-rs/polars">Polars</a> library and further discuss speeds
