@@ -1,7 +1,10 @@
 # Per Scholas Data Engineering Bootcamp Capstone Project 
 <br><br>
 
+👉🏻 For Current and Future Updates, click [here](#further-considerations-and-future-updates)
+
 ## Introduction:
+
 
 This Capstone Project is the culmination of my 17-week long Data Engineering bootcamp at Per Scholas, graciously powered by TEKSystems. 
 
