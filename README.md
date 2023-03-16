@@ -27,7 +27,7 @@ The capstone is divided into several components:
 <table>
 <th colspan="3"> <h2>Components</h2> </th>
 
-  <tr>
+  <tr>  <!-- ETL COLS -->
     <td>
     <h3>ETL </h3>
     </td>
@@ -38,6 +38,17 @@ The capstone is divided into several components:
     <h3>Data Visualization</h3>
     </td>
   </tr>
+  
+<tr>
+  <td>
+  <p><a href='https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL/ETL_Part_1_building_the_database.ipynb'>Part One:</a><br>Building a SQL Database remotely with mysql.connector</p>
+  <br>
+  <p>
+  <a href='https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL/ETL_Part_2_The_ETL_Process.ipynb'>Part Two:</a><br>My Entire ETL Workflow, including a few tips and tricks
+  </p>
+  </td>
+
+</tr>
   
 </table>
 </div>
