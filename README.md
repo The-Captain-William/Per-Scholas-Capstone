@@ -35,7 +35,7 @@ The capstone is divided into several components:
     <h3>ETL </h3>
     </td>
     <td>
-    <h3>Terminal Interface</h3>
+    <h3>Front End Interface</h3>
     </td>
     <td>
     <h3>Data Visualization</h3>
@@ -114,19 +114,15 @@ ETL
 - [ ] Compare the speeds of running pyspark.sql locally (using a single node) for the full ETL process with running pandas and discuss the appropriate use of each tool
 - [ ] introduce the <a href="https://github.com/pola-rs/polars">Polars</a> library and further discuss speeds
 
-Terminal
-- [ ] Command Line Front-End:
-  - [ ]  🛠 `#1` Rewrite all terminal code, creating more appropriate Classes for the terminal application 
-    - [ ] Consider using a library or writing my own library, if I can't find the tools I'm looking for
-  - [ ] Compile to .EXE
+Front-End
 
-- [ ] GUI Front-End
-  - [ ] Consider making a desktop GUI application with ctkinter (custom-tkinter)
+- [ ] GUI 
+  - [ ] 🛠 Make a desktop GUI application that can interact with the server and produce graphs based on user input
     - [ ] Compile to .EXE
   - [ ] Consider building a web-app to emulate the same functionality 
 
 Data Visualization
-- [ ] Redo matplot lib graphs to be more aesthetically pleasing, and more useful
+- [ ] Introduce extended graphing functionality and the ability to save rendered graphs created from the GUI
 - [ ] Introduce a few Tableau graphs with Tableau Public
 
 
@@ -134,3 +130,4 @@ Documentation and Packaging
 - [ ] Update README with todo tasks
 - [ ] Include documentation for each component on a seperate markdown file
   - [ ] Update README to link included documentation
+- [ ] Clean up all documentation
