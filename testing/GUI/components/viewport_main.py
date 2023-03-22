@@ -26,17 +26,32 @@ def login(sender, app_data, user_data):
         print(f"{err}")
 
 
+def select_one(sender, app_data, user_data):  # select one slider
+    for item_tag in user_data:  
+        if item_tag != sender:  
+            dpg.set_value(item_tag, False)
+    # user_data is a list of ID's
+    # if the sender data (selection we just made) is NOT the same as any value in the list we selected,
+    # turn it off. 
+    # unfortunately we have to iterate through every db on the list, perhaps I can optimize something in the future.
+
 
 def get_databases():
     # if using nested funcs, put them up top
+
+
+    def clean_database_list():
+            dpg.delete_item('db-dropdown', children_only=True)
+
 
     def append_databases_to_window(cursor):  # nested function, will get name of every server
         db_choices = [
             dpg.add_selectable(label=str(db_choice[0]), parent='db-dropdown') for db_choice in cursor
         ]
-        
+        # dpg.add selectable adds selectable straight away, but returns a list of tag ID's
         print(db_choices, 'line 30')
         return db_choices
+
 
     global server_connection
     
@@ -46,19 +61,21 @@ def get_databases():
         show_me_the_money = "SHOW databases"
         cursor.execute(show_me_the_money)
         
-        global db_choices
-        db_choices = append_databases_to_window(cursor)
+        clean_database_list()
 
+        db_choices = append_databases_to_window(cursor)  #  I need this list for selections later
 
-
-
-
+        for item_tag in db_choices:
+            dpg.configure_item(item_tag, callback=select_one, user_data=db_choices)  
+            # will add a callback to every database name, through its item ID
+            # user data sent is the list containing all current tag ID's
+ 
 
     except AssertionError:
         print("You need to connect to a database first")
     
-        
 
+        
 
 
 dpg.create_context()
@@ -77,18 +94,11 @@ with dpg.viewport_menu_bar():  # viewport
         host_box = dpg.add_input_text(label='Host', tag='host_box', default_value='localhost')
         login_button = dpg.add_button(label='Login', callback=login)
 
-    with dpg.menu(label='Select Database'):
-        dpg.add_menu_item(label="Refresh", callback=get_databases)
+
+
+    with dpg.menu(label='Select Database') as db_dropdown:  # TODO replace w/ selection style and print out of db name
         with dpg.tree_node(label='Current Database', tag='db-dropdown'):
             dpg.add_text('None', tag='no-server')
-            
-            def select_one(sender, app_data, user_data):  # select one slider
-                for dpg_item in user_data:  # user data reports item (, )
-                    if dpg_item != sender:  # if item is NOT the sender, set the rest to false
-                        dpg.set_value(dpg_item, False)
-            
-
-
 
 
     with dpg.menu(label="Widget Items"):
@@ -97,6 +107,7 @@ with dpg.viewport_menu_bar():  # viewport
         dpg.add_color_picker(label="Color Me", callback=print_me)
 
     dpg.add_menu_item(label="Help", callback=print_me)
+    dpg.add_menu_item(label="Refresh", callback=get_databases)
 
 dpg.show_imgui_demo()
 
@@ -109,7 +120,6 @@ print(server_connection)
 
 try:
     server_connection.close()
-
 except Exception as e :
     print(f"{e.__class__, e}")
     
