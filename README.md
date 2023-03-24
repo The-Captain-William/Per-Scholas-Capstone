@@ -1,7 +1,7 @@
 # Per Scholas Data Engineering Bootcamp Capstone Project 
 <br><br>
 
-👉🏻 For Current and Future Update plans, click [here](#further-considerations-and-future-updates)
+👉🏻 For Current and Future Update plans, click [here](#further-considerations-and-future-updates) <br>
 👉🏻 For a Roadmap on what I'm currently working on, click [here](Roadmap.md)
 
 ## Introduction:
