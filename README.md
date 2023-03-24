@@ -1,7 +1,8 @@
 # Per Scholas Data Engineering Bootcamp Capstone Project 
 <br><br>
 
-👉🏻 For Current and Future Updates, click [here](#further-considerations-and-future-updates)
+👉🏻 For Current and Future Update plans, click [here](#further-considerations-and-future-updates)
+👉🏻 For a Roadmap on what I'm currently working on, click [here](Roadmap.md)
 
 ## Introduction:
 
@@ -114,6 +115,7 @@ While I satisfied all of the requirements to land a perfect score on my capstone
 | 🛠     | In-Progress|
 |↗       | Up-Next     |
 
+This is just a birds-eye view. For a more granular look into progress check out my [Roadmap](Roadmap.md)
 
 ETL
 - [X] ✅ Create the SQL database through mysql.connector instead of pyspark.sql, allowing for more precise data types 
