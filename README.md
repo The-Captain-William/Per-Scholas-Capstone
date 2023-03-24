@@ -51,6 +51,10 @@ The capstone is divided into several components:
   </p>
   </td>
 
+<td>
+<a href='https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/development/images/wip_sql_portal.png'>WIP Front-End User Portal</a>
+</td>
+
 </tr>
   
 </table>
@@ -69,16 +73,20 @@ Languages: `Python` `SQL` <br>
 Major Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy`
 
 <br><br>
-### Terminal Interface
+### Front-End Interface
 ---
 **Outline:** <br>
-A User-Friendly Terminal Interface was built to abstract away SQL queries. 
+A User-Friendly Front-End Interface I'm calling the *Data Explorer* is being built to interact with sql servers.
 Using pyspark.sql and mysql.connector, a front end user can view and modify the contents of a SQL Database. 
+The goal is to be able to have two forms of interaction, direct SQL code and abstracted-away SQL queries using nodes with the 
+<a href='https://github.com/hoffstadt/DearPyGui'>DearPyGui</a> library. The user will be able to query, modify, and create graphs and visualizations directly from the Data Explorer. Could be very useful for datamarts.
+<br>
+<img src='https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/development/images/wip_sql_portal.png'>
 <br>
 
 **Technologies Used:**<br>
 Languages: `Python` `SQL` <br>
-Major Python Libraries: `pyspark.sql` `mysql.connector`
+Major Python Libraries: `pyspark.sql` `mysql.connector` `DearPyGui`
 <br>
 
 <br><br>
