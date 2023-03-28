@@ -191,11 +191,11 @@ with dpg.viewport_menu_bar():  # VIEWPORT
 
 
 with dpg.window(label='SQL Query Portal'): # SQL PROMPT
-    sql_db_column_name_portal = dpg.add_text('Column Names:') 
+    sql_db_column_name_portal = dpg.add_text('Table Names:') 
     with dpg.child_window(height=400, autosize_x=True): 
         with dpg.group(horizontal=True):
             sql_tables_listbox = dpg.add_listbox(width=200, tag='column-listbox', num_items=20)  # 1 item is 17.5 px in height
-            dpg.add_input_text(multiline=True, height=350, default_value='SQL Queries go here', tag='sql-box') # make resizeable?
+            dpg.add_input_text(multiline=True, height=350, default_value='SQL Queries go here', tag='sql-box', tab_input=True) # make resizeable?
     
     with dpg.group(horizontal=True):
         with dpg.child_window(height=40, width=200):
@@ -205,13 +205,48 @@ with dpg.window(label='SQL Query Portal'): # SQL PROMPT
 
 
 
-    with dpg.child_window():
+    with dpg.child_window():  # TABLE-MAKER
         with dpg.group():
             with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                            resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
                            borders_outerV=True, borders_innerH=True, borders_outerH=True, tag='sql-table-view') as query_results_table:
                 pass
                 
+
+with dpg.window(label='Dashboard'):  
+    with dpg.child_window(height=400, width=400, label='Bar Charts'):
+        with dpg.plot(label='Transactions By State', height=400, width=-1):
+            state_list = [["NY", 11], ["FL", 21], ["CT", 31]]
+            dpg.add_plot_legend()
+
+            trans_state_x = dpg.add_plot_axis(dpg.mvXAxis, label='State', no_gridlines=True)  
+            # mvXaxis, signifying X axis
+            # not plot x, plot y like matplotlib or other
+
+            dpg.set_axis_limits(trans_state_x, 9, 33)
+
+            dpg.set_axis_ticks(trans_state_x, state_list)
+
+            trans_state_y = dpg.add_plot_axis(dpg.mvYAxis, label='Number of Transactions')
+
+            dpg.set_axis_limits_auto(trans_state_y)
+
+
+
+
+
+
+with dpg.window(label="Dropdown Selection menu", width =500, height=300):
+    dpg.add_input_text(label="Filter (inc, -exc)", callback=lambda sender, app_data: dpg.set_value('filter_id', app_data) )  # real time # remember app_data sends info captured 
+    with dpg.child_window(height=100, width=200, tag='window_1'):  # child window, THEN filter set
+            with dpg.filter_set(tag="filter_id"):  
+                test_list = list('ayeee lets get this bread')
+                for selection in test_list:
+                    dpg.add_group(parent='filter_id', horizontal=True, filter_key=selection)  # this might break if you have identical names..but you prob won't have identical names.
+                    dpg.add_text(default_value=selection, parent=dpg.last_container())
+                    dpg.add_checkbox(parent=dpg.last_container())
+
+
 
 
 
