@@ -234,17 +234,94 @@ with dpg.window(label='Dashboard'):
 
 
 
-
+# TODO: turn this into its own big function w/ params
+# callback func for checkbox
 
 with dpg.window(label="Dropdown Selection menu", width =500, height=300):
+    activated_list = []
+    capture_ids = []
+    LIMIT = 3
+
+    def limit_checks(sender, app_data):
+
+
+
+        def check_values(app_data: str | int, activated_list: list, limit: int):
+
+            if app_data in activated_list:
+                activated_list.remove(app_data)
+            elif app_data not in activated_list and len(activated_list) < limit:  # has to be less than b/c 2 < 3, then add 1, then 3 !< 3 : # NOTE can optimize w/ -= and += but kinda buggy rn
+            #elif app_data not in activated_list and limit != 0:    
+                activated_list.append(app_data)
+
+            return len(activated_list) == limit
+
+
+
+            
+        response = check_values(app_data=app_data, activated_list=activated_list, limit=LIMIT)  # added kwarg style so I dont get confused
+
+
+        if response == True:
+            filter_id_children = dpg.get_item_children('filter_id')
+            for child in filter_id_children[1]:
+                child = dpg.get_item_children(child)
+                if child[1][1] not in activated_list:
+                    capture_ids.append(child[1])
+                    dpg.configure_item(child[1][1], enabled=False)
+                    dpg.configure_item(child[1][0], color=(255, 0, 0))
+        
+
+
+        elif response == False:
+            for id in capture_ids:
+                dpg.configure_item(id[0], color=(255, 255, 255))
+                dpg.configure_item(id[1], enabled=True)
+
+
+
+    with dpg.item_handler_registry(tag='checkbox_handler')as handler:
+        dpg.add_item_activated_handler(callback=limit_checks)
+
+
     dpg.add_input_text(label="Filter (inc, -exc)", callback=lambda sender, app_data: dpg.set_value('filter_id', app_data) )  # real time # remember app_data sends info captured 
     with dpg.child_window(height=100, width=200, tag='window_1'):  # child window, THEN filter set
             with dpg.filter_set(tag="filter_id"):  
                 test_list = list('ayeee lets get this bread')
+                test_list_text_chechbox_id = []
                 for selection in test_list:
+                    test_list_text_chechbox_id.clear()
                     dpg.add_group(parent='filter_id', horizontal=True, filter_key=selection)  # this might break if you have identical names..but you prob won't have identical names.
                     dpg.add_text(default_value=selection, parent=dpg.last_container())
-                    dpg.add_checkbox(parent=dpg.last_container())
+                    dpg.add_checkbox(parent=dpg.last_container(), user_data=dpg.get_value(dpg.last_item()))  # sender, appdata, user_data
+                    dpg.bind_item_handler_registry(dpg.last_item(), 'checkbox_handler')
+                
+                filter_id_children = dpg.get_item_children('filter_id')
+                for child in filter_id_children[1]:
+                    child = dpg.get_item_children(child)
+                    print(child[1])
+
+
+
+
+# def change_text(sender, app_data):
+#     dpg.set_value("text item", f"Mouse Button ID: {app_data}")
+
+# # def visible_call(sender, app_data):
+# #     print("I'm visible")
+
+# with dpg.item_handler_registry(tag="widget handler") as handler:
+#     dpg.add_item_clicked_handler(callback=change_text)
+#     # dpg.add_item_visible_handler(callback=visible_call)
+#     dpg.add_item_active_handler
+
+# with dpg.window(width=500, height=300):
+#     dpg.add_text("Click me with any mouse button", tag="text item")
+#     dpg.add_text("Close window with arrow to change visible state printing to console", tag="text item 2")
+
+# # bind item handler registry to item
+# dpg.bind_item_handler_registry("text item", "widget handler")
+# dpg.bind_item_handler_registry("text item 2", "widget handler")
 
 
 
