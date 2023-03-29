@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
 import mysql.connector as MariaDB
-from checkbox import show_checkbox_dropdown
+from checkbox import add_checkbox_dropdown
 
 import os
 
@@ -214,8 +214,26 @@ with dpg.window(label='SQL Query Portal'): # SQL PROMPT
                 pass
                 
 
-with dpg.window(label='Dashboard'):  
-    with dpg.child_window(height=400, width=400, label='Bar Charts'):
+
+cnxpool = MariaDB.pooling.MySQLConnectionPool(pool_name= "mypool", pool_size= 3, database='db_capstone', user=os.getenv('DB_USER'), password=os.getenv('DB_PASSWORD'))
+cnx_1 = cnxpool.get_connection()
+cnx_cur = cnx_1.cursor()
+cnx_cur.execute("""
+SELECT DISTINCT(cust_state)
+FROM cdw_sapp_customer
+ORDER BY 1;
+""")
+states = [state[0] for state in cnx_cur]
+
+with dpg.window(label='Dashboard'):
+
+    with dpg.child_window(height=400, width=400, label='Bar Charts', menubar=True):  # menu MUST be set to true
+        with dpg.menu_bar():
+            with dpg.menu(label='Menu'):
+                with dpg.menu(label='State'):
+                    add_checkbox_dropdown(limit=3, choices=states, height=200, width=230)
+
+
         with dpg.plot(label='Transactions By State', height=400, width=-1):
             state_list = [["NY", 11], ["FL", 21], ["CT", 31]]
             dpg.add_plot_legend()
@@ -235,17 +253,8 @@ with dpg.window(label='Dashboard'):
 
 
 
-cnxpool = MariaDB.pooling.MySQLConnectionPool(pool_name= "mypool", pool_size= 3, database='db_capstone', user=os.getenv('DB_USER'), password=os.getenv('DB_PASSWORD'))
-cnx_1 = cnxpool.get_connection()
-cnx_cur = cnx_1.cursor()
-cnx_cur.execute("""
-SELECT DISTINCT(cust_state)
-FROM cdw_sapp_customer
-ORDER BY 1;
-""")
-states = [state[0] for state in cnx_cur]
 
-show_checkbox_dropdown(3, states)
+
 
 
 # def change_text(sender, app_data):

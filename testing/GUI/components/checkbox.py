@@ -1,9 +1,7 @@
 import dearpygui.dearpygui as dpg
 
-
-
-def show_checkbox_dropdown(limit: int | bool, choices: list):  # TODO make if False then skip limit
-    with dpg.window(label="Dropdown Selection menu", width =500, height=300):
+def add_checkbox_dropdown(limit: int | bool, choices: list, label: str =None, **kwargs):  # TODO make if False then skip limit
+    with dpg.child_window(label="Dropdown Selection menu", **kwargs):
         limit = limit
         activated_list = []
         capture_ids = []
@@ -50,8 +48,7 @@ def show_checkbox_dropdown(limit: int | bool, choices: list):  # TODO make if Fa
         with dpg.item_handler_registry(tag='checkbox_handler')as handler:
             dpg.add_item_activated_handler(callback=limit_checks)
 
-
-        dpg.add_input_text(label="Filter", callback=lambda sender, app_data: dpg.set_value('filter_id', app_data) )  # real time # remember app_data sends info captured 
+        dpg.add_input_text(label='Filter', callback=lambda sender, app_data: dpg.set_value('filter_id', app_data), width=150)  # real time # remember app_data sends info captured 
         with dpg.child_window(height=200, width=200, tag='window_1', autosize_y=True):  # child window, THEN filter set
                 with dpg.filter_set(tag="filter_id"):  
                     #test_list = list('ayeee lets get this bread')
