@@ -104,6 +104,27 @@ class ConnectionHandler:
 
         except KeyError as e:
             print(f'Error, Cusor Not Found. {e}')
+    
+    def pop(self, connection_name: str = None, query: str = None, all: bool = False):
+        """
+        You can delete the saved query of a connection with 
+        `connection.pop('tomato', query)`
+
+        You can delete all queries for a given connection with
+        `connection.pop('tomato')`
+
+        You can delete all queries for all connections with
+        `connection.pop(all=True)`
+        
+        """
+        if connection_name is not None and query is not None:
+            del self.__returns[connection_name][query]
+        
+        elif connection_name is not None:
+            del self.__returns[connection_name]
+
+        elif all is True:
+            self.__returns.clear()
 
 
     def show(self, connection_name: str = None, query: str = None):
@@ -194,7 +215,12 @@ if __name__ =='__main__':
     connection.cur('tomato')
     connection.cur_execute('tomato', query)
     connection.cur_execute('tomato', query_2)
-
-
+    
     connection.show('tomato')
+
+    connection.pop('tomato', query)
+    connection.show('tomato')
+
+    connection.pop(all=True)
+
     connection.close_connection()
