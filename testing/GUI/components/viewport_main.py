@@ -1,7 +1,8 @@
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
 import mysql.connector as MariaDB
-from checkbox import add_checkbox_dropdown
+from checkbox import DropdownMenu
+
 
 import os
 
@@ -190,7 +191,6 @@ with dpg.viewport_menu_bar():  # VIEWPORT
 
 
 
-
 with dpg.window(label='SQL Query Portal'): # SQL PROMPT
     sql_db_column_name_portal = dpg.add_text('Table Names:') 
     with dpg.child_window(height=400, autosize_x=True): 
@@ -225,17 +225,39 @@ ORDER BY 1;
 """)
 states = [state[0] for state in cnx_cur]
 
-with dpg.window(label='Dashboard'):
+def mod_state(a, s):
+    #if len(dropdown_state.text_return) == 3:
+    for index, state in enumerate(dropdown_state.text_return):
+        state_list[index][0] = state
+
+        dpg.set_axis_ticks(trans_state_x, state_list)
+
+
+
+
+
+with dpg.window(label='Dashboard', tag='#dashboard'):
+
 
     with dpg.child_window(height=400, width=400, label='Bar Charts', menubar=True):  # menu MUST be set to true
         with dpg.menu_bar():
             with dpg.menu(label='Menu'):
-                with dpg.menu(label='State'):
-                    add_checkbox_dropdown(limit=3, choices=states, height=200, width=230)
+                with dpg.item_handler_registry(tag='register_vision'):
+                    dpg.add_item_toggled_open_handler(callback=mod_state)
+                with dpg.menu(label='State', tag='#statemenu'):
+                    dropdown_state = DropdownMenu(limit=3, choices=states, height=200, width=230)
+                dpg.bind_item_handler_registry('#statemenu', 'register_vision')
 
 
-        with dpg.plot(label='Transactions By State', height=400, width=-1):
-            state_list = [["NY", 11], ["FL", 21], ["CT", 31]]
+
+
+        with dpg.plot(label='Transactions By State', height=400, width=-1, tag='#TBS'):
+            state_list = [["", 11], ["", 21], ["", 31]]
+
+
+
+
+
             dpg.add_plot_legend()
 
             trans_state_x = dpg.add_plot_axis(dpg.mvXAxis, label='State', no_gridlines=True)  
@@ -249,7 +271,7 @@ with dpg.window(label='Dashboard'):
             trans_state_y = dpg.add_plot_axis(dpg.mvYAxis, label='Number of Transactions')
 
             dpg.set_axis_limits_auto(trans_state_y)
-
+    
 
 
 
