@@ -2,30 +2,47 @@ import dearpygui.dearpygui as dpg
 import mysql.connector as MariaDB
 from mysql.connector.pooling import PooledMySQLConnection
 MariaDB.pooling.MySQLConnectionPool
+from typing import Optional
 
-
-class ConnectionHandler:
+class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
     # explicitly define connection pool to instantiate multiple connections
     # mothership
-    def __init__(self, connection: MariaDB.pooling.MySQLConnectionPool):
+
+    def __init__(self, pool_name: Optional[str] = None, pool_size: int = 5, pool_reset_session: bool = True,
+                 host='localhost', user: str = None, password: str = None, database: Optional[str] = None):
+        super().__init__(pool_name=pool_name, pool_size=pool_size, pool_reset_session=pool_reset_session, host=host, user=user, password=password, database=database)
         """
         Wraps around a Mysql.Connector Connection pool. \n
         Example: 
             connection = ConnectionHandler( \n
-            MariaDB.pooling.MySQLConnectionPool( \n
             pool_name = 'test', \n
             host='localhost',  \n
             user=getenv('DB_USER'), \n
             password=getenv('DB_PASSWORD'), \n
             database='db_capstone'  # db optional \n
             ) \n
-        ) \n
+
 
         """
-        self.__pool = connection
+        #kwargs = kwargs.update({'host':host, 'user':user, 'password':password, 'database':database,
+                                #'pool_name':pool_name, 'pool_size':pool_size, 'pool_reset_session':pool_reset_session})
+
+
+        #self.__pool = self
         self.__connections = {}
         self.__cursors = {}
         self.__returns = {}
+
+
+
+
+
+
+
+
+
+
+
 
     # assign single connector from the internal connection 
     # connectionhandler.connection1 = connect()
@@ -41,7 +58,7 @@ class ConnectionHandler:
         Technically not needed, you can jump right into `ConnectionHandler.cur('connection_name')`
         and a connection will be made for you if none exist.
         """
-        self.__connections[connection_name] = self.__pool.get_connection()
+        self.__connections[connection_name] = self.get_connection()
 
         
     def cur(self, connection_name: str):
@@ -162,6 +179,11 @@ class ConnectionHandler:
                 print(row)
     
     def close_connection(self, connection_name: str = None):
+        """
+        Enter the name of the connection to close the connection,
+        or run connection.close_connection() without arguments
+        to close all connections.
+        """
         if connection_name is None:
 
             for connection in self.__connections.keys():
@@ -198,18 +220,25 @@ if __name__ =='__main__':
     """
 
     from os import getenv
+    # connection = ConnectionHandler(
+    #     MariaDB.pooling.MySQLConnectionPool(
+    #     pool_name = 'test',
+    #     host='localhost',  
+    #     user=getenv('DB_USER'),
+    #     password=getenv('DB_PASSWORD'),
+    #     database='db_capstone'  # db optional
+    #     )
+    # )
+
+
     connection = ConnectionHandler(
-        MariaDB.pooling.MySQLConnectionPool(
-        pool_name = 'test',
-        host='localhost',  
-        user=getenv('DB_USER'),
-        password=getenv('DB_PASSWORD'),
-        database='db_capstone'  # db optional
-        )
+    pool_name ='test',
+    pool_size=5, 
+    host='localhost',  
+    user=getenv('DB_USER'),
+    password=getenv('DB_PASSWORD'),
+    database='db_capstone'  # db optional
     )
-
-
-
 
     connection.create_connection('tomato')
     connection.cur('tomato')
