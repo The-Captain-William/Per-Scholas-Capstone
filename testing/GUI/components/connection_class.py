@@ -9,7 +9,7 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
     # mothership
 
     def __init__(self, pool_name: Optional[str] = None, pool_size: int = 5, pool_reset_session: bool = True,
-                 host='localhost', user: str = None, password: str = None, database: Optional[str] = None):
+                 host='localhost', user: str = None, password: str = None, database: Optional[str] = None):        
         super().__init__(pool_name=pool_name, pool_size=pool_size, pool_reset_session=pool_reset_session, host=host, user=user, password=password, database=database)
         """
         Wraps around a Mysql.Connector Connection pool. \n
@@ -24,9 +24,9 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
 
 
         """
+
         #kwargs = kwargs.update({'host':host, 'user':user, 'password':password, 'database':database,
                                 #'pool_name':pool_name, 'pool_size':pool_size, 'pool_reset_session':pool_reset_session})
-
 
         #self.__pool = self
         self.__connections = {}
