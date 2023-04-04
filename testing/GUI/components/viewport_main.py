@@ -175,6 +175,7 @@ with dpg.viewport_menu_bar():  # VIEWPORT
         login_button = dpg.add_button(label='Login', callback=login)
 
 
+
     with dpg.menu(label='Select Database') as db_dropdown:  # TODO replace w/ selection style and print out of db name
         with dpg.tree_node(label='Current Database', tag='db-dropdown'):
             dpg.add_text('Connect to a Server', tag='no-server')
