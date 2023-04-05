@@ -25,6 +25,12 @@ query_portal = QueryPortal(container_tag='portal')
 connection = None
 
 demo.show_demo()
+
+def connection_error(e):
+    with dpg.window(label='Error', no_title_bar=True):
+        dpg.add_text(f"Error, {e}")
+        dpg.add_button(label='OK', callback=lambda: dpg.configure_item(dpg.last_container(), show=False))
+
 def event_handler(sender, app_data, user_data):
     
     if user_data == 'login':
@@ -66,9 +72,7 @@ def event_handler(sender, app_data, user_data):
             connection.pop('default', collect_query)
 
         except DBError as e:
-            with dpg.window(label='Error', no_title_bar=True):
-                dpg.add_text(f"Error, {e}")
-                dpg.add_button(label='OK', callback=lambda: dpg.configure_item(dpg.last_container(), show=False))
+            connection_error(e)
 
     if user_data == 'sql-db-listbox':  # all databases
         global selected_database
@@ -82,6 +86,7 @@ def event_handler(sender, app_data, user_data):
         dpg.configure_item(query_portal.sql_tables_listbox, items=[item[0] for item in connection['default'][show_tables]])
 
 
+
     if user_data == 'sql-table-listbox':  # tables of the database
         global selected_table
         selected_table = dpg.get_value(query_portal.sql_tables_listbox)
@@ -91,6 +96,18 @@ def event_handler(sender, app_data, user_data):
         connection.cur_execute('default', show_columns, database=selected_database)
         query_portal.display_query_results(connection['default'][show_columns])
 
+    if user_data == 'refresh':
+        event_handler(None, None, 'sql-db-listbox')
+        event_handler(None, None, 'sql-table-listbox')
+
+    if user_data == 'create-view':
+        try:
+            connection.cur('default')
+            connection.cur_execute('default', app_data)
+            with dpg.window(label='View Created!', width=-1):
+                dpg.add_button(label='OK', callback=lambda: dpg.configure_item(dpg.last_container(), show=False))
+        except DBError as e:
+            connection_error(e)
 
 
 

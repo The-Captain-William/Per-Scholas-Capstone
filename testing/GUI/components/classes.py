@@ -94,7 +94,6 @@ class QueryPortal(GenericContainerContext):
 
 
 
-
     def get_connection(self, connection: ConnectionHandler):
         self.connection = connection
         self.connection.add_connection(self.tag)
@@ -106,10 +105,22 @@ class QueryPortal(GenericContainerContext):
         self.connection.cur_execute(self.tag, self.query)
         #print(self.connection[self.tag][self.query])
 
+    @staticmethod    
+    def create_view(name):
+        current_query = dpg.get_value('sql-box')
+        create_view = f"CREATE VIEW {name} AS\n" + current_query
+        return create_view
 
     def display(self, external_callback: FunctionType):
+        # entire window
         with dpg.window(label='SQL Query Portal', show=True, tag=self.tag, height=600, width=800): # SQL PROMPT
+            with dpg.menu_bar():
+                with dpg.menu(label='Menu'):
+                    dpg.add_menu_item(label='Refresh', callback=external_callback, user_data='refresh')
+            
             with dpg.child_window(height=400, autosize_x=True):
+                 
+                # first rectangle, tabs of db and db tables
                 with dpg.group(horizontal=True):
                     with dpg.tab_bar():
                         with dpg.tab(label='All Databases'):
@@ -117,15 +128,27 @@ class QueryPortal(GenericContainerContext):
                         with dpg.tab(label='Database Tables'):
                             self.sql_tables_listbox = dpg.add_listbox(width=200, tag='column-listbox', num_items=20, callback=external_callback,user_data='sql-table-listbox')  # 1 item is 17.5 px in height
 
-                            
+                    # write queries here 
                     with dpg.tab_bar():
                         with dpg.tab(label='SQL Queries'):
                             self.sql_query_box = dpg.add_input_text(multiline=True, height=350, width=-1, default_value='SQL Queries go here', tag='sql-box', tab_input=True) 
 
+            # hidden file browser
             with dpg.file_dialog(label="File Directory", width=300, height=400, show=False, tag='sql-save', user_data=None,callback=lambda a, s, u, contents: self.save_file(a, s, u, self.contents)): # NOTE using lambda as a closure, to get data w.r.t self and then moving to a static function
                 dpg.add_file_extension(".sql", color=(179, 217, 255))
                 dpg.add_file_extension(".csv", color=(255, 255, 179))
 
+            # SQL View Maker
+            with dpg.window(label='Create View from Current Query', width=300, height=100, show=False, tag='sql-push-view'):
+                dpg.add_text('SQL View Name:')
+                dpg.add_separator()
+                dpg.add_input_text(tag='view-name')
+                with dpg.group(horizontal=True):
+                    dpg.add_button(label='OK', callback=lambda: external_callback(None, self.create_view(dpg.get_value('view-name')), 'create-view')) 
+                    dpg.add_button(label='Cancel', callback=lambda: dpg.configure_item('sql-push-view', show=False))
+
+
+            # options underneath query writer input box
             with dpg.group(horizontal=True):
                 self.db_selected = 'show-db'
                 with dpg.child_window(height=45, width=200):
@@ -139,14 +162,21 @@ class QueryPortal(GenericContainerContext):
                                 with dpg.group():
                                     dpg.add_text('Export Query:')
                                     dpg.add_separator()
-                                    dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='sql-box'))
+                                    dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='sql-box'))   # TODO: refactor
                                 with dpg.group():
                                     dpg.add_text('Export Data:')
                                     dpg.add_separator()                                                                
                                     dpg.add_button(label='Export Data as CSV', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='query-window-csv'))
-                                    dpg.add_button(label='Write Data to Server as View')
+                                    dpg.add_button(label='Write Data to Server as View', callback=lambda: dpg.configure_item('sql-push-view', show=True))
+                                         
+
+
             
-            with dpg.child_window():  # TABLE-MAKER
+            
+                
+
+            # Table 
+            with dpg.child_window():  
                 with dpg.group(tag='query-window'):
                     with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                                 resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
