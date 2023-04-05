@@ -9,6 +9,7 @@ class GenericContainerContext:
             self.args = args
             self.list = []
             self.tag = container_tag
+            self.contents = 'test'
 
     def show(self):
         state = dpg.get_item_state(self.tag)['visible']  # get item state returns bool
@@ -64,21 +65,32 @@ class QueryPortal(GenericContainerContext):
     def __init__(self, container_tag: str, *args, **kwargs):
         super().__init__(container_tag, *args, **kwargs)
 
+
     @staticmethod
-    def sql_save(sender, app_data, user_data):  # app_data, user_data is data of sql box 
+    def save_file(sender, app_data, user_data, contents):  # app_data, user_data is data of sql box 
         from time import sleep
-        with open(file=app_data['file_path_name'], mode='w') as sql_file:
-            sql_file.write(dpg.get_value(user_data))
+
+
+        if user_data == 'sql-box':
+        
+            with open(file=app_data['file_path_name'], mode='w') as sql_file:
+                sql_file.write(dpg.get_value(user_data))
+            
+
+        elif user_data == 'query-window-csv':
+            import csv
+            with open(file=app_data['file_path_name'], mode='w', newline='') as query_to_csv:
+                csv_file = csv.writer(query_to_csv)
+                csv_file.writerows(contents)  # contents is a list of tuples
+                # writing row for row in in [contents]
+
+
         with dpg.window():
             dpg.add_text(f"File {app_data['file_name']} Saved")
             dpg.add_button(label='ok', callback=lambda:dpg.configure_item(dpg.last_container(), show=False))
+        
         sleep(2)    
         dpg.configure_item(dpg.last_container(), show=False)
-
-    @staticmethod
-    def csv_save(sender, app_data, user_data):
-        import csv
-        pass
 
 
 
@@ -110,8 +122,9 @@ class QueryPortal(GenericContainerContext):
                         with dpg.tab(label='SQL Queries'):
                             self.sql_query_box = dpg.add_input_text(multiline=True, height=350, width=-1, default_value='SQL Queries go here', tag='sql-box', tab_input=True) 
 
-            with dpg.file_dialog(label="Save query as .sql", width=300, height=400, show=False, tag='sql-save', user_data=self.sql_query_box,callback=self.sql_save): 
+            with dpg.file_dialog(label="File Directory", width=300, height=400, show=False, tag='sql-save', user_data=None,callback=lambda a, s, u, contents: self.save_file(a, s, u, self.contents)): # NOTE using lambda as a closure, to get data w.r.t self and then moving to a static function
                 dpg.add_file_extension(".sql", color=(179, 217, 255))
+                dpg.add_file_extension(".csv", color=(255, 255, 179))
 
             with dpg.group(horizontal=True):
                 self.db_selected = 'show-db'
@@ -126,11 +139,11 @@ class QueryPortal(GenericContainerContext):
                                 with dpg.group():
                                     dpg.add_text('Export Query:')
                                     dpg.add_separator()
-                                    dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item('sql-save', show=True))
+                                    dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='sql-box'))
                                 with dpg.group():
                                     dpg.add_text('Export Data:')
                                     dpg.add_separator()                                                                
-                                    dpg.add_button(label='Export Data as CSV')
+                                    dpg.add_button(label='Export Data as CSV', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='query-window-csv'))
                                     dpg.add_button(label='Write Data to Server as View')
             
             with dpg.child_window():  # TABLE-MAKER
@@ -151,16 +164,22 @@ class QueryPortal(GenericContainerContext):
                 dpg.add_button(label='Export Data')
 
 
-    def display_query_results(self, results: list[dict]):
+    def display_query_results(self, results: list):
+        self.contents = results
         dpg.delete_item('sql-table-view', children_only=True)
 
-        for key, val in results[0].items(): # initiate headers
-            dpg.add_table_column(label=key, parent='sql-table-view', width_stretch=False)
+        for column_name in results[0]: # initiate headers
+            dpg.add_table_column(label=column_name, parent='sql-table-view', width_stretch=False)
         
-        for dictionary in results:  # initiate results
+        for row in results[1:]:  # initiate results
             with dpg.table_row(parent='sql-table-view'):
-                for value in dictionary.values():
+                for value in row:
                         dpg.add_text(value, wrap=300)
+
+        
+    
+
+
 
 
 

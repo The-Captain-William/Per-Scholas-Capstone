@@ -47,6 +47,7 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
     def __getitem__(self, connection_name):  # way to access item via dict or iteration
         return self.__returns[connection_name]
 
+
     def create_connection(self, connection_name: str):
         """
         Establish a connection manually. 
@@ -76,13 +77,13 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
         try:
             self.__connections[connection_name].cmd_query(f"USE {database}")
             self.__connections[connection_name].database = database
-            print(self.__connections[connection_name].database)
+            #print(self.__connections[connection_name].database)
 
         except AttributeError as a:
             print(f"Error, check to see if the connection name is correct: {a}")
 
 
-    def cur_execute(self, connection_name: str, connection_prompt: str, save: bool = True, database: Optional[str] = None):
+    def cur_execute(self, connection_name: str, connection_prompt: str, save: bool = True, database: Optional[str] = None, headers: bool = True):
         """
         - Executing a cursor with save default on true will allow you to access stored data from the 
         dictionary at a later time, or any time you want. \n
@@ -93,6 +94,8 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
         - A Database does not need to be specified in cur_exectute if you specified a database on initialization with
         `ConnectionHandler(database='database_name')` or if you specified a database for a specific connection with
         the .set_database method `ConnectionHandler.set_database('database_name', 'connection_name')`. \n
+
+        - Having `headers` set to True will ensure the zeroth index item is a tuple of the column headers
 
 
         Example: 
@@ -114,6 +117,9 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
                      or it's lost forever.
                      can be useful for functions.
 
+            Headers is true: 
+                results[0] -> will be a tuple of the column names          
+
         Example without using default database:
             `connection = ConnectionHandler(database=None)`
             
@@ -132,30 +138,33 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
         elif database is not None:
             self.__connections[connection_name].cmd_query(f"USE {database}")
 
-
-
-
-
-
+        # REMINDER: How the Data Structure is organized:
         # { 'connection': {query: [results]}, {query2 : [results]},
         # {'connection2}
         # }
+        # NOTE: query == connection_prompt
+
 
         try:
-            self.__cursors[connection_name].execute(connection_prompt)
-            if save == True:
-                # self.__returns[connection_name] = {connection_prompt: [row for row in self.__cursors[connection_name]]}
-                self.__returns[connection_name].update({connection_prompt: [row for row in self.__cursors[connection_name]]})
-
-
+            self.__cursors[connection_name].execute(connection_prompt)  # execute cursor
+            column_headers = self.__cursors[connection_name].column_names  # grab column names
+            results = []
             
-            elif save == False:
-                return [row for row in self.__cursors[connection_name]]
+            if headers == True:
+                results.insert(0, column_headers)  # insert column names at 0 
 
+            results += [row for row in self.__cursors[connection_name]]  # extend results
+            
+            if save == True:
+                self.__returns[connection_name].update({connection_prompt: results})  # save if need be
+
+            elif save == False:
+                return results  # return
 
         except KeyError as e:
             print(f'Error, Cusor Not Found. {e}')
     
+
     def pop(self, connection_name: str = None, query: str = None, all: bool = False):
         """
         You can delete the saved query of a connection with 
@@ -282,32 +291,44 @@ if __name__ =='__main__':
     # create connection
     connection.create_connection('tomato')
     connection.create_connection('pasta')
+    connection.create_connection('meatballs')
 
     # set database
     connection.set_database('db_capstone', 'tomato')
     connection.set_database('cwm', 'pasta')
+    connection.set_database('db_capstone','meatballs')
     
     # create cursor for connection
     connection.cur('tomato')
     connection.cur('pasta')
+    connection.cur('meatballs', dictionary=True)
 
     # execute queries
     connection.cur_execute('tomato', query)  # save stored results T/F, default T
     connection.cur_execute('pasta', query_3)
+    connection.cur_execute('meatballs', query)
     
     # print stored results for all queries or for a specific query
     connection.show('tomato') # for all
     connection.show('pasta', query_3) # for a specific query
+    connection.show('meatballs', query)
 
     # access stored results
     tomato_results = connection['tomato'][query]
     pasta_results = connection['pasta'][query_3]
+
+    # show headers in tomato_results:
+    print('headers:', tomato_results[0])
+
+    # show headers in meatball results 
+    print("headers:", connection['meatballs'][query])
 
     # pop results for a specific query from connection handler
     connection.pop('tomato', query)
 
     # clean connection handler of all stored data
     connection.pop(all=True)
+
 
     # close connection
     connection.close_connection()
