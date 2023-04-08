@@ -1,7 +1,10 @@
 import dearpygui.dearpygui as dpg
 from types import FunctionType
+from typing import Optional
 from connection_class import ConnectionHandler
 from mysql.connector import cursor
+
+
 
 class GenericContainerContext:
     def __init__(self, container_tag: str, *args, **kwargs):
@@ -10,6 +13,7 @@ class GenericContainerContext:
             self.list = []
             self.tag = container_tag
             self.contents = 'test'
+
 
     def show(self):
         state = dpg.get_item_state(self.tag)['visible']  # get item state returns bool
@@ -32,7 +36,7 @@ class Login(GenericContainerContext):
             dpg.add_input_text(label='Server Password', password=True, default_value=default_pass, tag='pw_box')
             dpg.add_input_text(label='Host', default_value='localhost', tag='host_box' )
             with dpg.group(horizontal=True):
-                dpg.add_button(label='Login', callback=external_callback, user_data='login', tag='login-confirm')
+                dpg.add_button(label='Login', callback=external_callback, user_data=self.tag, tag='login-confirm')
                 self.login_response_tag = 'login-confirmation'
                 dpg.add_text(tag=self.login_response_tag)
 
@@ -72,7 +76,6 @@ class QueryPortal(GenericContainerContext):
 
 
         if user_data == 'sql-box':
-        
             with open(file=app_data['file_path_name'], mode='w') as sql_file:
                 sql_file.write(dpg.get_value(user_data))
             
@@ -162,19 +165,13 @@ class QueryPortal(GenericContainerContext):
                                 with dpg.group():
                                     dpg.add_text('Export Query:')
                                     dpg.add_separator()
-                                    dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='sql-box'))   # TODO: refactor
+                                    dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='sql-box', label='Export SQL Query as .sql'))   # TODO: refactor
                                 with dpg.group():
                                     dpg.add_text('Export Data:')
                                     dpg.add_separator()                                                                
-                                    dpg.add_button(label='Export Data as CSV', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='query-window-csv'))
+                                    dpg.add_button(label='Export Data as CSV', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='query-window-csv', label='Save Data as .csv'))
                                     dpg.add_button(label='Write Data to Server as View', callback=lambda: dpg.configure_item('sql-push-view', show=True))
                                          
-
-
-            
-            
-                
-
             # Table 
             with dpg.child_window():  
                 with dpg.group(tag='query-window'):
@@ -207,16 +204,206 @@ class QueryPortal(GenericContainerContext):
                         dpg.add_text(value, wrap=300)
 
         
-    
-
-
-
-
-
     def show(self):
         return super().show()
 
 
+
+class SaapPortal(GenericContainerContext):
+    def __init__(self, container_tag: str, *args, **kwargs):
+        super().__init__(container_tag, *args, **kwargs)
+        self.zipcode_list_selection = None  # TODO refactor 
+        self.state_list_selection = None
+
+
+    def _select_one(self, sender: str | int, app_data, user_data, current_item: None | int):
+        if current_item is None:
+            pass
+        else:
+            if sender != current_item:
+                dpg.set_value(current_item, False)
+        current_item = sender
+        return current_item
+
+    
+
+    # callback has to be tied to select one like this for now
+    def zip_callback(self, sender, app_data, user_data):
+        self.zipcode_list_selection = self._select_one(sender, app_data, user_data, current_item=self.zipcode_list_selection)
+        
+
+
+    # select_transactions_query = f"""SELECT 
+	# 	COUNT(DISTINCT(transaction_id)) AS `Number of Transactions`, 
+	# 	ROUND(SUM(DISTINCT(transaction_value)), 2) AS `Total Sales`,
+	# 	timeid AS `Date`
+
+    #     FROM cdw_sapp_credit_card
+    #     LEFT JOIN cdw_sapp_customer ON cust_ssn = ssn
+    #     WHERE cust_zip = {}
+    #     GROUP BY timeid
+    #     ORDER BY 3;
+    # """
+
+
+    def state_callback(self, sender, app_data, user_data):
+        self.state_list_selection = self._select_one(sender, app_data, user_data, current_item=self.state_list_selection)
+    
+    # dropdown filter
+    def _create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
+        print(parent_window)
+        for item in collection:
+            dpg.add_selectable(label=item, callback=callback, parent=parent_window, filter_key=item)
+
+    # external function
+    def create_zipcodes(self, collection: list):
+        self.zipcode_list = collection
+        self._create_dropdown_filter(collection=collection, parent_window=self.zip_filter_set, callback=self.zip_callback)
+    
+    def create_states(self, collection:list):
+        self.state_list = collection
+        self._create_dropdown_filter(collection=collection, parent_window=self.state_filter_set, callback=self.state_callback) 
+
+
+
+
+
+    def display(self):
+        # main window
+        with dpg.window(label='SaaP Bank Data-Mart Portal', height=600, width=743):
+            with dpg.group():
+                with dpg.child_window():
+                    with dpg.tab_bar():
+                        # Transactions 
+                        with dpg.tab(label='Transaction Details'):
+                            with dpg.group():
+                                with dpg.child_window():
+                                    with dpg.tab_bar():
+                                        # Transactions 1: By Region
+                                        with dpg.tab(label='Transactions by Region'):
+                                            dpg.add_text('Display the transactions made by customers living in a given zip code for a given month and year.')
+                                            dpg.add_separator()
+                                            with dpg.group(horizontal=True):
+                                                dpg.add_plot(width=480, height=450)
+                                                with dpg.group():
+                                                    dpg.add_text('Zip codes:')
+                                                    self.__zip_input = dpg.add_input_text(width=-1, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
+                                                    with dpg.tooltip(dpg.last_item()):
+                                                        dpg.add_text('Filter list')
+                                                    self.__zipcodes_filter_key = None
+                                                    
+                                                    with dpg.child_window(width=-1, height=160) as self.zipcodes:
+                                                        pass
+                                                        with dpg.filter_set() as self.zip_filter_set:
+                                                            pass
+                                                    
+
+                                                    dpg.add_date_picker(level=dpg.mvDatePickerLevel_Month, default_value={'month_day':1, 'year':2018, 'month':1})
+                                                    dpg.add_button(label='Search', width=-1)
+                                                    
+                                        # Transactions 2: By Type
+                                        with dpg.tab(label='Transactions by Type'):
+                                            dpg.add_text('Display the number and total values of transactions for a given type.')
+                                            dpg.add_separator()
+                                            with dpg.group(horizontal=True):
+                                                dpg.add_plot(width=480, height=450)
+                                                with dpg.group():
+                                                    dpg.add_text('Transaction Types:')
+                                                    self.types = dpg.add_listbox(num_items=8, width=-1) #TODO add transaction types
+                                                    dpg.add_button(label='Search', width=-1)
+
+                                        # Transactions 3: Transactions for branches by state
+                                        with dpg.tab(label='Transactions by State'):
+                                            dpg.add_text('Display the number and total values of transactions for branches in a given state.')
+                                            dpg.add_separator()
+                                            with dpg.group(horizontal=True):
+                                                dpg.add_plot(width=480, height=450)
+                                                with dpg.group():
+                                                    dpg.add_text('Transactions by State:')
+                                                    dpg.add_input_text(width=-1, callback=lambda s, a:dpg.set_value(self.state_filter_set, a))
+                                                    with dpg.tooltip(dpg.last_item()):
+                                                        dpg.add_text('Filter list')
+                                                    with dpg.child_window(width=-1, height=160) as self.transaction_types:
+                                                        with dpg.filter_set() as self.state_filter_set:
+                                                            pass
+                                                    dpg.add_button(label='Search', width=-1)
+
+
+                        # Customer Details
+                        with dpg.tab(label='Customer Details'):
+                            with dpg.group():
+                                with dpg.child_window():
+                                    with dpg.tab_bar():
+
+                                        # Customer details 1 & 2, find and select customer 
+                                        with dpg.tab(label='Customer Account Search'):
+                                            dpg.add_text('Check Customer Account Details')
+                                            with dpg.group(horizontal=True):
+
+                                                # right side
+                                                with dpg.child_window(width=330, height=450):
+                                                    dpg.add_text('Search for customer with first & last name, or jump to customer id.', wrap=286)
+                                                    dpg.add_spacer()
+                                                    with dpg.group(horizontal=True):
+                                                        with dpg.group():
+                                                            dpg.add_text('First name')
+                                                            dpg.add_input_text(tag='first-name', width=90)
+                                                        with dpg.group():
+                                                            dpg.add_text('Last name')
+                                                            dpg.add_input_text(tag='last-name', width=90)
+                                                        with dpg.group():
+                                                            dpg.add_text('cust_id')
+                                                            dpg.add_input_text(tag='Cust-id', width=90)
+                                                    dpg.add_spacer()
+                                                    dpg.add_button(label='Search', width=286)
+                                                    
+                                                # left side                                                    
+                                                with dpg.child_window(width=330, height=450):                                                                                                                                                                      
+                                                    dpg.add_text('Customer Report:')
+                                                    dpg.add_text('Lifetime Value')
+
+
+
+
+
+                                        with dpg.tab(label='Generate Customer Bill'):
+
+                                            with dpg.child_window(width=-1, height=225):
+                                                dpg.add_text('View Transaction History')
+                                            with dpg.group(horizontal=True):
+                                                with dpg.group(horizontal=True):
+                                                    
+                                                    dpg.add_text('Between')
+                                                    
+                                                    self.__start_date = dpg.add_button(label='start', width=100)
+                                                    with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
+                                                        dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u:dpg.configure_item(self.__start_date, label=a))
+                                                    
+                                                    dpg.add_text('and')
+                                                    
+                                                    self.__stop_date = dpg.add_button(label='stop', width=100)
+                                                    with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
+                                                        
+                                                        dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u: dpg.configure_item(self.__stop_date, label=a))
+                                                
+                                                def clear_dates():
+                                                    for _ in range(2):
+                                                        dpg.configure_item(self.__start_date, label='start')
+                                                        dpg.configure_item(self.__stop_date, label='end')
+                                                
+                                                with dpg.group():    
+                                                    dpg.add_button(label='Search', width=160)
+                                                    dpg.add_button(label='Clear', width=160, callback=clear_dates)
+                
+                                                pass
+
+                                            with dpg.child_window(width=-1, height=225):
+                                                dpg.add_plot(width=-1, height=225)
+                                                
+
+            with dpg.group():
+                with dpg.child_window():
+                    pass
 
 
 

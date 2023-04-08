@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-from classes import Login, QueryPortal
+from classes import Login, QueryPortal, SaapPortal
 from connection_class import ConnectionHandler
 from mysql.connector import Error as DBError
 from dearpygui import demo
@@ -21,6 +21,7 @@ dpg.setup_dearpygui()
 
 login = Login(container_tag='db_login')
 query_portal = QueryPortal(container_tag='portal')
+saap_portal = SaapPortal(container_tag='sapp')
 
 connection = None
 
@@ -33,7 +34,7 @@ def connection_error(e):
 
 def event_handler(sender, app_data, user_data):
     
-    if user_data == 'login':
+    if user_data == login.tag:
         login.grab_credentials()
 
         try:
@@ -53,6 +54,37 @@ def event_handler(sender, app_data, user_data):
             connection.cur_execute('default', show_db, headers=False)
             dpg.configure_item(query_portal.sql_databases_listbox, items=[item[0] for item in connection['default'][show_db]])
             dpg.configure_item('query-button', enabled=True)
+            
+            # SaaP Window
+            # Transaction Menu 
+            # Menu 1:
+            # Zip codes
+            show_zips = 'SELECT DISTINCT(cust_zip) \
+                            FROM cdw_sapp_customer;'
+            #Menu 2:
+            show_types = 'SELECT DISTINCT(transaction_type) \
+                            FROM cdw_sapp_credit_card;'
+            # Menu 3:
+            show_states = 'SELECT DISTINCT(branch_state) \
+                            FROM cdw_sapp_branch \
+                                ORDER BY 1;'
+            
+            
+            connection.create_connection('Saap')
+            connection.cur('Saap')
+            connection.cur_execute('Saap',show_zips, database='db_capstone',headers=False)
+            connection.cur_execute('Saap', show_types, database='db_capstone', headers=False)
+            connection.cur_execute('Saap', show_states, database='db_capstone', headers=False)
+
+            zip_codes = [item[0] for item in connection['Saap'][show_zips]]
+            transaction_types = [item[0] for item in connection['Saap'][show_types]]
+            transaction_states = [item[0] for item in connection['Saap'][show_states]]
+
+            saap_portal.create_zipcodes(zip_codes)
+            saap_portal.create_states(transaction_states)
+            dpg.configure_item(saap_portal.types, items=transaction_types)
+            
+
             
             
         except DBError as e:
@@ -118,10 +150,9 @@ dpg.create_viewport(title='Data Explorer', width=2000, height=1200)
 with dpg.viewport_menu_bar():
     login.display(default_login=db_user, default_pass=db_password, external_callback=event_handler)
     query_portal.display(external_callback=event_handler)
+    saap_portal.display()
 
     dpg.add_button(label='Query Portal', callback=query_portal.show, tag='query-button')
-
-
 
 
 
