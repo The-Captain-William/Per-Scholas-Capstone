@@ -1,9 +1,9 @@
 import dearpygui.dearpygui as dpg
 from types import FunctionType
-from typing import Optional
+from typing import Optional, Union
 from connection_class import ConnectionHandler
 from mysql.connector import Error as DBError
-
+from contextlib import contextmanager
 
 
 class GenericContainerContext:
@@ -31,10 +31,35 @@ class GenericContainerContext:
         return [item[0] for item in list]
 
 
+    # dropdown filter
+    def _create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
+        """
+        Will create a dropdown filter given a parent window, the parent window being the filter set.
+        """
+        for item in collection:
+            dpg.add_selectable(label=item, callback=callback, parent=parent_window, filter_key=item, user_data=item)
+
     def toggle(self):
+        """
+        Displays the window on or off
+        """
         state = dpg.get_item_state(self.tag)['visible']  # get item state returns dict, dict ['visible'] returns bool
         dpg.configure_item(self.tag, show=not state)  # negate bool
 
+    def _window_query_results(self, results: list, parent: str | int):
+        """
+        Displays query results for a window
+        """
+        self.contents = results
+        dpg.delete_item(parent, children_only=True)
+
+        for column_name in results[0]: # initiate headers
+            dpg.add_table_column(label=column_name, parent=parent, width_stretch=False)
+        
+        for row in results[1:]:  # initiate results
+            with dpg.table_row(parent=parent):
+                for value in row:
+                        dpg.add_text(value, wrap=300)
 
 
 class Login(GenericContainerContext):
@@ -99,7 +124,7 @@ class QueryPortal(GenericContainerContext):
         elif user_data == self.__export_csv_file_button:
             import csv
             with open(file=app_data['file_path_name'], mode='w', newline='') as query_to_csv:
-                print(app_data, app_data['file_path_name'])
+                #print(app_data, app_data['file_path_name'])
                 csv_file = csv.writer(query_to_csv)
                 csv_file.writerows(contents)  # contents is a list of tuples
                 # writing row for row in in [contents]
@@ -182,7 +207,7 @@ class QueryPortal(GenericContainerContext):
 
         query = F"DESCRIBE {app_data}"
         self.connection.cur_execute(self.tag, query)
-        self.__window_query_results(self.connection[self.tag][query])
+        self._window_query_results(self.connection[self.tag][query], parent=self.query_results_table)
 
     def __run_query(self, sender, app_data, user_data):
         if sender == self.__run_query_button:
@@ -190,7 +215,7 @@ class QueryPortal(GenericContainerContext):
         
         try:
             data = self.connection.cur_execute(self.tag, query, save=False, headers=True)
-            self.__window_query_results(data)
+            self._window_query_results(data, parent=self.query_results_table)
         except DBError as e:
             self.__connection_error(e)
 
@@ -258,27 +283,15 @@ class QueryPortal(GenericContainerContext):
                     dpg.add_button(label='Cancel', callback=lambda: dpg.configure_item(self.__sql_push_view, show=False))              
 
 
+
             # Table 
             with dpg.child_window():  
-                with dpg.group(tag='query-window'):
+                with dpg.group():
                     with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                                 resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
                                 borders_outerV=True, borders_innerH=True, borders_outerH=True, tag='sql-table-view') as self.query_results_table:
                                 pass
 
-
-
-    def __window_query_results(self, results: list):
-        self.contents = results
-        dpg.delete_item('sql-table-view', children_only=True)
-
-        for column_name in results[0]: # initiate headers
-            dpg.add_table_column(label=column_name, parent='sql-table-view', width_stretch=False)
-        
-        for row in results[1:]:  # initiate results
-            with dpg.table_row(parent='sql-table-view'):
-                for value in row:
-                        dpg.add_text(value, wrap=300)
 
         
     def toggle(self):
@@ -289,9 +302,9 @@ class QueryPortal(GenericContainerContext):
 class SaapPortal(GenericContainerContext):
     def __init__(self, container_tag: str, *args, **kwargs):
         super().__init__(container_tag, *args, **kwargs)
-        self.zipcode_list_selection = None  # TODO refactor 
+        self.zipcode_list_selection = None 
         self.state_list_selection = None
-
+        self.type_list_selection = None
 
 
     def __setup(self, connection: ConnectionHandler):
@@ -309,13 +322,18 @@ class SaapPortal(GenericContainerContext):
         for key, value in setup_dict.items():
             connection.cur_execute(self.tag, value, headers=False, database='db_capstone')
             data = self._collect_items(connection[self.tag][value])
-            self.__create_dropdown_filter(collection=data,parent_window=key)
+            self._create_dropdown_filter(collection=data,parent_window=key)
 
 
+    def _create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
+        if parent_window == self.zip_filter_set:
+            callback = self.zip_callback
+        super()._create_dropdown_filter(collection, parent_window, callback)  # will iterate through from the parent class, then I can extend functionality
+            
+    
 
 
-
-    def _select_one(self, sender: str | int, app_data, user_data, current_item: None | int):
+    def _select_one(self, sender: str | int, current_item: str | int, app_data: Optional[Union[str, int]] = None, user_data: Optional[Union[str, int]] = None):
         if current_item is None:
             pass
         else:
@@ -329,10 +347,6 @@ class SaapPortal(GenericContainerContext):
     # callback has to be tied to select one like this for now
     def zip_callback(self, sender, app_data, user_data):
 
-    
-
-        self.zipcode_list_selection = self._select_one(sender, app_data, user_data, current_item=self.zipcode_list_selection)
-        
         def create_query(user_data):
             select_transactions_query = f"""SELECT 
                 COUNT(DISTINCT(transaction_id)) AS `Number of Transactions`, 
@@ -345,24 +359,23 @@ class SaapPortal(GenericContainerContext):
                 GROUP BY timeid
                 ORDER BY 3;
             """
-            print(select_transactions_query)
-            self.connection.cur_execute('test', select_transactions_query, database='db_capstone')
-            print(self.connection['test'])
-        return create_query(user_data)
+            return select_transactions_query
+        
+        self.zipcode_list_selection = self._select_one(sender, current_item=self.zipcode_list_selection)
+        query = create_query(user_data=user_data)
+        self.connection.cur_execute(self.tag, query, database='db_capstone')
+        self._window_query_results(self.connection[self.tag][query], self.query_transactions_per_zip)
 
 
 
     
-    # dropdown filter
-    def __create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
-        print(parent_window)
-        for item in collection:
-            dpg.add_selectable(label=item, callback=callback, parent=parent_window, filter_key=item, user_data=item)
+
+
 
 
     def window(self):
         # main window
-        with dpg.window(label='SaaP Bank Data-Mart Portal', height=600, width=743, tag=self.tag):
+        with dpg.window(label='SaaP Bank Data-Mart Portal', height=630, width=743, tag=self.tag):
             with dpg.group():
                 with dpg.child_window():
                     with dpg.tab_bar():
@@ -379,10 +392,11 @@ class SaapPortal(GenericContainerContext):
                                                 dpg.add_plot(width=480, height=450)
                                                 with dpg.group():
                                                     dpg.add_text('Zip codes:')
-                                                    self.__zip_input = dpg.add_input_text(width=-1, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
+                                                    dpg.add_input_text(width=-1, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
                                                     with dpg.tooltip(dpg.last_item()):
                                                         dpg.add_text('Filter list')
                                                     
+                                                    # will populate with zip codes
                                                     with dpg.child_window(width=-1, height=160) as self.zipcodes:
                                                         pass
                                                         with dpg.filter_set() as self.zip_filter_set:
@@ -391,9 +405,17 @@ class SaapPortal(GenericContainerContext):
 
                                                     dpg.add_date_picker(level=dpg.mvDatePickerLevel_Month, default_value={'month_day':1, 'year':2018, 'month':1})
                                                     dpg.add_button(label='Search', width=-1)
+                                            
+                                            with dpg.collapsing_header(label='Transactions per Zipcode:'):
+                                                with dpg.child_window(height=400, width=-1):
+                                                    with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                                resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                                borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transactions_per_zip:
+                                                                pass     
+
                                                     
                                         # Transactions 2: By Type
-                                        with dpg.tab(label='Transactions by Type'):
+                                        with dpg.tab(label='Transactions by Type:'):
                                             dpg.add_text('Display the number and total values of transactions for a given type.')
                                             dpg.add_separator()
                                             with dpg.group(horizontal=True):
@@ -406,6 +428,13 @@ class SaapPortal(GenericContainerContext):
                                                     with dpg.child_window(width=-1, height=160) as self.transaction_types:
                                                         with dpg.filter_set() as self.tansaction_filter_sets:
                                                             pass
+
+                                            with dpg.collapsing_header(label='Transactions per Type'):
+                                                with dpg.child_window(height=400, width=-1):
+                                                    with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                                resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                                borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transactions_per_type:
+                                                                pass     
 
                                         # Transactions 3: Transactions for branches by state
                                         with dpg.tab(label='Transactions by State'):
@@ -422,6 +451,13 @@ class SaapPortal(GenericContainerContext):
                                                         with dpg.filter_set() as self.state_filter_set:
                                                             pass
                                                     dpg.add_button(label='Search', width=-1)
+
+                                            with dpg.collapsing_header(label='Transactions by State, Branch:'):
+                                                with dpg.child_window(height=400, width=-1):
+                                                    with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                                resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                                borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transactions_per_state_branch:
+                                                                pass  
 
 
                         # Customer Details
@@ -490,15 +526,11 @@ class SaapPortal(GenericContainerContext):
                                                     dpg.add_button(label='Search', width=160)
                                                     dpg.add_button(label='Clear', width=160, callback=clear_dates)
                 
-                                                pass
-
-                                            with dpg.child_window(width=-1, height=225):
-                                                dpg.add_plot(width=-1, height=225)
                                                 
 
-            with dpg.group():
-                with dpg.child_window():
-                    pass
+
+                                   
+
 
 
 

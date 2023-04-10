@@ -26,7 +26,6 @@ def viewport_buttons(enabled: bool):
 
 
 
-
 def event_handler():
     try:
         login_window.grab_credentials()
@@ -61,6 +60,8 @@ dpg.create_context()
 dpg.setup_dearpygui()
 
 dpg.create_viewport(title='Data Explorer', width=2000, height=1200)
+
+show_demo()
 
 with dpg.viewport_menu_bar():
     login_window.window(default_login=db_user, default_pass=db_password, external_callback=event_handler)
