@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 from types import FunctionType
 from typing import Optional
 from connection_class import ConnectionHandler
-from mysql.connector import cursor
+from mysql.connector import Error as DBError
 
 
 
@@ -12,12 +12,29 @@ class GenericContainerContext:
             self.args = args
             self.list = []
             self.tag = container_tag
-            self.contents = 'test'
+
+    def setup(self, connection: ConnectionHandler):
+        """
+        Set up the window with a connection and display databases available.
+        """
+        self.connection = connection
+        self.connection.create_connection(self.tag)
+        self.connection.cur(self.tag)
+
+    @staticmethod
+    def _collect_items(list: list):
+        """
+        queries return as a list of tuples (x, y);
+        this will parse tuples and grab the first item.
+        Works well if you know your query returns a single column
+        """
+        return [item[0] for item in list]
 
 
-    def show(self):
-        state = dpg.get_item_state(self.tag)['visible']  # get item state returns bool
+    def toggle(self):
+        state = dpg.get_item_state(self.tag)['visible']  # get item state returns dict, dict ['visible'] returns bool
         dpg.configure_item(self.tag, show=not state)  # negate bool
+
 
 
 class Login(GenericContainerContext):
@@ -30,7 +47,7 @@ class Login(GenericContainerContext):
         self.__login_address = dpg.get_value('host_box')
         
     
-    def display(self, default_login: str, default_pass: str, external_callback: FunctionType):
+    def window(self, default_login: str, default_pass: str, external_callback: FunctionType):
         with dpg.menu(label='Login Information', tag=self.tag):
             dpg.add_input_text(label='Server Login Name', default_value=default_login, tag='user_box')
             dpg.add_input_text(label='Server Password', password=True, default_value=default_pass, tag='pw_box')
@@ -52,8 +69,8 @@ class Login(GenericContainerContext):
     def login_address(self):
         return self.__login_address
 
-    def show(self):
-        return super().show()
+    def toggle(self):
+        return super().toggle()
 
     def confirm_login(self, response):
         if response is True:
@@ -70,19 +87,19 @@ class QueryPortal(GenericContainerContext):
         super().__init__(container_tag, *args, **kwargs)
 
 
-    @staticmethod
-    def save_file(sender, app_data, user_data, contents):  # app_data, user_data is data of sql box 
+    def __save_file(self, sender, app_data, user_data, contents):  # app_data, user_data is data of sql box 
         from time import sleep
 
 
-        if user_data == 'sql-box':
+        if user_data == self.__export_sql_file_button:
             with open(file=app_data['file_path_name'], mode='w') as sql_file:
                 sql_file.write(dpg.get_value(user_data))
             
 
-        elif user_data == 'query-window-csv':
+        elif user_data == self.__export_csv_file_button:
             import csv
             with open(file=app_data['file_path_name'], mode='w', newline='') as query_to_csv:
+                print(app_data, app_data['file_path_name'])
                 csv_file = csv.writer(query_to_csv)
                 csv_file.writerows(contents)  # contents is a list of tuples
                 # writing row for row in in [contents]
@@ -94,84 +111,153 @@ class QueryPortal(GenericContainerContext):
         
         sleep(2)    
         dpg.configure_item(dpg.last_container(), show=False)
-
-
-
-    def get_connection(self, connection: ConnectionHandler):
-        self.connection = connection
-        self.connection.add_connection(self.tag)
         
 
-    def run_query(self, app_data, user_data):
+    def __run_query(self, app_data, user_data): 
         self.query = dpg.get_value('sql-box')
         self.connection.cur(self.tag)
         self.connection.cur_execute(self.tag, self.query)
         #print(self.connection[self.tag][self.query])
 
-    @staticmethod    
-    def create_view(name):
-        current_query = dpg.get_value('sql-box')
-        create_view = f"CREATE VIEW {name} AS\n" + current_query
-        return create_view
+    def __create_view(self):
+        current_query = dpg.get_value(self.sql_query_box)
+        name = dpg.get_value(self.__sql_view_name)
+        if any(name):
+            create_view = f"CREATE VIEW {name} AS\n" + current_query
+            try:
+                self.connection.cur_execute(self.tag, create_view, save=False)
+            except DBError as e:
+                self.__connection_error(e)
+        else:
+            e = "You need to write a name first"
+            self.__connection_error(e)
 
-    def display(self, external_callback: FunctionType):
+
+    def setup(self, connection: ConnectionHandler):
+        """
+        Set up the window with a connection and display databases available.
+        """
+        self.connection = connection
+        self.connection.create_connection(self.tag)
+        self.connection.cur(self.tag)
+        self.connection.cur_execute(self.tag, 'SHOW DATABASES;', headers=False)
+        # set up list box
+        dpg.configure_item(self.sql_databases_listbox, items=[item[0] for item in connection[self.tag]['SHOW DATABASES;']])
+
+    def refresh(self):
+        dpg.configure_item(self.sql_databases_listbox, items=[])
+        self.setup(self.connection)
+        dpg.configure_item(self.sql_tables_listbox, items=[])
+        if self.current_database is not None:
+            try:
+                self.__get_db_tables(sender=None, app_data=self.current_database)
+            except:
+                pass
+
+
+    def __connection_error(self, e):
+        with dpg.window(label='Error'):
+            dpg.add_text(f"Error, {e}")
+            dpg.add_button(label='close', callback= lambda: dpg.configure_item(dpg.last_container(), show=False))
+
+
+
+    def __get_db_tables(self, sender, app_data):
+        """
+        Clicking the database name will select that database and show the tables in that database.
+        """
+        try:
+            self.current_database = app_data
+            self.connection.cur_execute(self.tag, 'SHOW TABLES;', database=app_data, headers=False)
+            dpg.configure_item(self.__db_selected, default_value=f'Current Database:\n{app_data}')
+            collection = self._collect_items(self.connection[self.tag]['SHOW TABLES;'])
+            dpg.configure_item(self.sql_tables_listbox, items=collection)
+        except DBError as e:
+            self.__connection_error(e)
+
+    def __get_table_columns(self, sender, app_data):
+        """
+        Will describe a given tables column names and datatypes, sends to the query window. 
+        """
+
+        query = F"DESCRIBE {app_data}"
+        self.connection.cur_execute(self.tag, query)
+        self.__window_query_results(self.connection[self.tag][query])
+
+    def __run_query(self, sender, app_data, user_data):
+        if sender == self.__run_query_button:
+            query = dpg.get_value(self.sql_query_box)
+        
+        try:
+            data = self.connection.cur_execute(self.tag, query, save=False, headers=True)
+            self.__window_query_results(data)
+        except DBError as e:
+            self.__connection_error(e)
+
+
+
+
+
+    def window(self):
         # entire window
-        with dpg.window(label='SQL Query Portal', show=True, tag=self.tag, height=600, width=800): # SQL PROMPT
+        with dpg.window(label='SQL Query Portal', show=False, tag=self.tag, height=600, width=800): # SQL PROMPT
             with dpg.menu_bar():
                 with dpg.menu(label='Menu'):
-                    dpg.add_menu_item(label='Refresh', callback=external_callback, user_data='refresh')
+                    dpg.add_menu_item(label='Refresh', callback=self.refresh)
             
             with dpg.child_window(height=400, autosize_x=True):
                  
-                # first rectangle, tabs of db and db tables
+                # first rectangle, tabs of db and db tableself.placeholder
                 with dpg.group(horizontal=True):
                     with dpg.tab_bar():
                         with dpg.tab(label='All Databases'):
-                            self.sql_databases_listbox = dpg.add_listbox(width=200, tag='db-listbox', num_items=20, callback=external_callback, user_data='sql-db-listbox')  
+                            self.sql_databases_listbox = dpg.add_listbox(width=200, num_items=20, callback=self.__get_db_tables)  
                         with dpg.tab(label='Database Tables'):
-                            self.sql_tables_listbox = dpg.add_listbox(width=200, tag='column-listbox', num_items=20, callback=external_callback,user_data='sql-table-listbox')  # 1 item is 17.5 px in height
+                            self.sql_tables_listbox = dpg.add_listbox(width=200, num_items=20, callback=self.__get_table_columns)  # 1 item is 17.5 px in height
 
                     # write queries here 
                     with dpg.tab_bar():
                         with dpg.tab(label='SQL Queries'):
-                            self.sql_query_box = dpg.add_input_text(multiline=True, height=350, width=-1, default_value='SQL Queries go here', tag='sql-box', tab_input=True) 
+                            self.sql_query_box = dpg.add_input_text(multiline=True, height=350, width=-1, default_value='SQL Queries go here', tab_input=True) 
 
-            # hidden file browser
-            with dpg.file_dialog(label="File Directory", width=300, height=400, show=False, tag='sql-save', user_data=None,callback=lambda a, s, u, contents: self.save_file(a, s, u, self.contents)): # NOTE using lambda as a closure, to get data w.r.t self and then moving to a static function
-                dpg.add_file_extension(".sql", color=(179, 217, 255))
-                dpg.add_file_extension(".csv", color=(255, 255, 179))
 
-            # SQL View Maker
-            with dpg.window(label='Create View from Current Query', width=300, height=100, show=False, tag='sql-push-view'):
-                dpg.add_text('SQL View Name:')
-                dpg.add_separator()
-                dpg.add_input_text(tag='view-name')
-                with dpg.group(horizontal=True):
-                    dpg.add_button(label='OK', callback=lambda: external_callback(None, self.create_view(dpg.get_value('view-name')), 'create-view')) 
-                    dpg.add_button(label='Cancel', callback=lambda: dpg.configure_item('sql-push-view', show=False))
 
 
             # options underneath query writer input box
             with dpg.group(horizontal=True):
-                self.db_selected = 'show-db'
                 with dpg.child_window(height=45, width=200):
-                    dpg.add_text(default_value='', tag=self.db_selected)
+                    self.__db_selected = dpg.add_text(default_value='')
                 with dpg.child_window(height=45, autosize_x=True):
                     with dpg.group(horizontal=True):
-                        dpg.add_button(label='Run Query', callback=external_callback, tag='sql-button', user_data='sql-box')
+                        self.__run_query_button = dpg.add_button(label='Run Query', callback=self.__run_query, tag='sql-button')
                         dpg.add_button(label='Export..')
                         with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
                             with dpg.group(horizontal=True):
                                 with dpg.group():
                                     dpg.add_text('Export Query:')
                                     dpg.add_separator()
-                                    dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='sql-box', label='Export SQL Query as .sql'))   # TODO: refactor
+                                    self.__export_sql_file_button = dpg.add_button(label='Export SQL Query as .sql', callback=lambda: dpg.configure_item(self.__sql_save, show=True, label='Export SQL Query as .sql', user_data=self.__export_sql_file_button))   # TODO: refactor
                                 with dpg.group():
                                     dpg.add_text('Export Data:')
                                     dpg.add_separator()                                                                
-                                    dpg.add_button(label='Export Data as CSV', callback=lambda: dpg.configure_item('sql-save', show=True, user_data='query-window-csv', label='Save Data as .csv'))
-                                    dpg.add_button(label='Write Data to Server as View', callback=lambda: dpg.configure_item('sql-push-view', show=True))
-                                         
+                                    self.__export_csv_file_button = dpg.add_button(label='Export Data as CSV', callback=lambda: dpg.configure_item(self.__sql_save, show=True, label='Save Data as .csv', user_data=self.__export_csv_file_button))
+                                    self.__export_sql_view_button = dpg.add_button(label='Write Data to Server as View', callback=lambda: dpg.configure_item(self.__sql_push_view, show=True))
+
+            # hidden file browser
+            with dpg.file_dialog(label="File Directory", width=300, height=400, show=False, user_data=None,callback=lambda a, s, u, contents: self.__save_file(a, s, u, self.contents)) as self.__sql_save: # NOTE using lambda as a closure, to get data w.r.t self and then moving to a static function
+                dpg.add_file_extension(".sql", color=(179, 217, 255))
+                dpg.add_file_extension(".csv", color=(255, 255, 179))
+
+            # SQL View Maker
+            with dpg.window(label='Create View from Current Query', width=300, height=100, show=False) as self.__sql_push_view:
+                dpg.add_text('SQL View Name:')
+                dpg.add_separator()
+                self.__sql_view_name = dpg.add_input_text()
+                with dpg.group(horizontal=True):
+                    dpg.add_button(label='OK', callback=self.__create_view) 
+                    dpg.add_button(label='Cancel', callback=lambda: dpg.configure_item(self.__sql_push_view, show=False))              
+
+
             # Table 
             with dpg.child_window():  
                 with dpg.group(tag='query-window'):
@@ -181,17 +267,8 @@ class QueryPortal(GenericContainerContext):
                                 pass
 
 
-    def export_data(self):
-        with dpg.window(label='Export Options:'):
-            with dpg.group():
-                dpg.add_text(default_value='SQL Query')
-                dpg.add_button(label='Export SQL Query as .SQL')
-            with dpg.group():
-                dpg.add_text(default_value='Data')
-                dpg.add_button(label='Export Data')
 
-
-    def display_query_results(self, results: list):
+    def __window_query_results(self, results: list):
         self.contents = results
         dpg.delete_item('sql-table-view', children_only=True)
 
@@ -204,16 +281,38 @@ class QueryPortal(GenericContainerContext):
                         dpg.add_text(value, wrap=300)
 
         
-    def show(self):
-        return super().show()
+    def toggle(self):
+        return super().toggle()
 
 
-
+# HERE 
 class SaapPortal(GenericContainerContext):
     def __init__(self, container_tag: str, *args, **kwargs):
         super().__init__(container_tag, *args, **kwargs)
         self.zipcode_list_selection = None  # TODO refactor 
         self.state_list_selection = None
+
+
+
+    def __setup(self, connection: ConnectionHandler):
+        return super().setup(connection)
+    
+
+    def setup(self, connection: ConnectionHandler):
+        self.__setup(connection=connection)
+        setup_dict = {
+            self.zip_filter_set:'SELECT DISTINCT(cust_zip) FROM cdw_sapp_customer;',
+            self.state_filter_set:'SELECT DISTINCT(transaction_type) FROM cdw_sapp_credit_card;',
+            self.tansaction_filter_sets:'SELECT DISTINCT(branch_state) FROM cdw_sapp_branch ORDER BY 1;' 
+        }
+
+        for key, value in setup_dict.items():
+            connection.cur_execute(self.tag, value, headers=False, database='db_capstone')
+            data = self._collect_items(connection[self.tag][value])
+            self.__create_dropdown_filter(collection=data,parent_window=key)
+
+
+
 
 
     def _select_one(self, sender: str | int, app_data, user_data, current_item: None | int):
@@ -229,48 +328,41 @@ class SaapPortal(GenericContainerContext):
 
     # callback has to be tied to select one like this for now
     def zip_callback(self, sender, app_data, user_data):
+
+    
+
         self.zipcode_list_selection = self._select_one(sender, app_data, user_data, current_item=self.zipcode_list_selection)
         
+        def create_query(user_data):
+            select_transactions_query = f"""SELECT 
+                COUNT(DISTINCT(transaction_id)) AS `Number of Transactions`, 
+                ROUND(SUM(DISTINCT(transaction_value)), 2) AS `Total Sales`,
+                timeid AS `Date`
+
+                FROM cdw_sapp_credit_card
+                LEFT JOIN cdw_sapp_customer ON cust_ssn = ssn
+                WHERE cust_zip = {user_data}
+                GROUP BY timeid
+                ORDER BY 3;
+            """
+            print(select_transactions_query)
+            self.connection.cur_execute('test', select_transactions_query, database='db_capstone')
+            print(self.connection['test'])
+        return create_query(user_data)
 
 
-    # select_transactions_query = f"""SELECT 
-	# 	COUNT(DISTINCT(transaction_id)) AS `Number of Transactions`, 
-	# 	ROUND(SUM(DISTINCT(transaction_value)), 2) AS `Total Sales`,
-	# 	timeid AS `Date`
 
-    #     FROM cdw_sapp_credit_card
-    #     LEFT JOIN cdw_sapp_customer ON cust_ssn = ssn
-    #     WHERE cust_zip = {}
-    #     GROUP BY timeid
-    #     ORDER BY 3;
-    # """
-
-
-    def state_callback(self, sender, app_data, user_data):
-        self.state_list_selection = self._select_one(sender, app_data, user_data, current_item=self.state_list_selection)
     
     # dropdown filter
-    def _create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
+    def __create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
         print(parent_window)
         for item in collection:
-            dpg.add_selectable(label=item, callback=callback, parent=parent_window, filter_key=item)
-
-    # external function
-    def create_zipcodes(self, collection: list):
-        self.zipcode_list = collection
-        self._create_dropdown_filter(collection=collection, parent_window=self.zip_filter_set, callback=self.zip_callback)
-    
-    def create_states(self, collection:list):
-        self.state_list = collection
-        self._create_dropdown_filter(collection=collection, parent_window=self.state_filter_set, callback=self.state_callback) 
+            dpg.add_selectable(label=item, callback=callback, parent=parent_window, filter_key=item, user_data=item)
 
 
-
-
-
-    def display(self):
+    def window(self):
         # main window
-        with dpg.window(label='SaaP Bank Data-Mart Portal', height=600, width=743):
+        with dpg.window(label='SaaP Bank Data-Mart Portal', height=600, width=743, tag=self.tag):
             with dpg.group():
                 with dpg.child_window():
                     with dpg.tab_bar():
@@ -290,7 +382,6 @@ class SaapPortal(GenericContainerContext):
                                                     self.__zip_input = dpg.add_input_text(width=-1, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
                                                     with dpg.tooltip(dpg.last_item()):
                                                         dpg.add_text('Filter list')
-                                                    self.__zipcodes_filter_key = None
                                                     
                                                     with dpg.child_window(width=-1, height=160) as self.zipcodes:
                                                         pass
@@ -309,8 +400,12 @@ class SaapPortal(GenericContainerContext):
                                                 dpg.add_plot(width=480, height=450)
                                                 with dpg.group():
                                                     dpg.add_text('Transaction Types:')
-                                                    self.types = dpg.add_listbox(num_items=8, width=-1) #TODO add transaction types
-                                                    dpg.add_button(label='Search', width=-1)
+                                                    dpg.add_input_text(width=-1, callback=lambda s, a:dpg.set_value(self.tansaction_filter_sets, a))  # decided to make everything a filter, its cleaner
+                                                    with dpg.tooltip(dpg.last_item()):
+                                                        dpg.add_text('Filter list')
+                                                    with dpg.child_window(width=-1, height=160) as self.transaction_types:
+                                                        with dpg.filter_set() as self.tansaction_filter_sets:
+                                                            pass
 
                                         # Transactions 3: Transactions for branches by state
                                         with dpg.tab(label='Transactions by State'):
