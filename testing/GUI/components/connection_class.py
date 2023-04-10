@@ -77,7 +77,7 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
         try:
             self.__connections[connection_name].cmd_query(f"USE {database}")
             self.__connections[connection_name].database = database
-            #print(self.__connections[connection_name].database)
+            print('DATABASE', self.__cursors[connection_name].database)
 
         except AttributeError as a:
             print(f"Error, check to see if the connection name is correct: {a}")
@@ -305,6 +305,7 @@ if __name__ =='__main__':
 
     # execute queries
     connection.cur_execute('tomato', query)  # save stored results T/F, default T
+    connection.cur_execute('tomato', query_2)
     connection.cur_execute('pasta', query_3)
     connection.cur_execute('meatballs', query)
     
@@ -312,6 +313,13 @@ if __name__ =='__main__':
     connection.show('tomato') # for all
     connection.show('pasta', query_3) # for a specific query
     connection.show('meatballs', query)
+
+    print('\n\n\n\n')
+    print('results')
+    connection.show('tomato')
+    print('results2')
+    print(connection['tomato'])
+    print('\n\n\n\n')
 
     # access stored results
     tomato_results = connection['tomato'][query]
