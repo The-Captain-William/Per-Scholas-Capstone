@@ -305,6 +305,10 @@ class SaapPortal(GenericContainerContext):
         self.zipcode_list_selection = None 
         self.state_list_selection = None
         self.type_list_selection = None
+        
+        self.total_sales = [] 
+        self.total_dates = []
+        self.total_purchaes = []
 
 
     def __setup(self, connection: ConnectionHandler):
@@ -347,16 +351,18 @@ class SaapPortal(GenericContainerContext):
     # callback has to be tied to select one like this for now
     def zip_callback(self, sender, app_data, user_data):
 
+        self.total_sales = []
+        self.total_dates = []
         def create_query(user_data):
             select_transactions_query = f"""SELECT 
                 COUNT(DISTINCT(transaction_id)) AS `Number of Transactions`, 
                 ROUND(SUM(DISTINCT(transaction_value)), 2) AS `Total Sales`,
-                timeid AS `Date`
+                MONTH(timeid) AS `Date`
 
                 FROM cdw_sapp_credit_card
                 LEFT JOIN cdw_sapp_customer ON cust_ssn = ssn
                 WHERE cust_zip = {user_data}
-                GROUP BY timeid
+                GROUP BY `Date`
                 ORDER BY 3;
             """
             return select_transactions_query
@@ -364,7 +370,26 @@ class SaapPortal(GenericContainerContext):
         self.zipcode_list_selection = self._select_one(sender, current_item=self.zipcode_list_selection)
         query = create_query(user_data=user_data)
         self.connection.cur_execute(self.tag, query, database='db_capstone')
+        print(self.connection[self.tag][query])
+
+
+        for index in range(1, len(self.connection[self.tag][query]) -1):
+            total_sales = self.connection[self.tag][query][index][1]
+            self.total_sales.insert(index -1, total_sales)
+            total_dates = self.connection[self.tag][query][index][2]
+            self.total_dates.insert(index -1, total_dates)
+
+        print(type(self.total_dates[0]))
+        print(self.total_sales)
+        print(self.total_dates)
+
+        dpg.set_value(self.sales_per_zip_plot_line, [self.total_dates, self.total_sales])
+        dpg.set_axis_limits(self.sales_per_zip_plot_revenue, 0, max(self.total_sales))
+        dpg.set_item_label(self.sales_per_zip_plot_line, f'Sales in 2018 for zipcode: {user_data}')
+
+
         self._window_query_results(self.connection[self.tag][query], self.query_transactions_per_zip)
+
 
 
 
@@ -389,25 +414,67 @@ class SaapPortal(GenericContainerContext):
                                             dpg.add_text('Display the transactions made by customers living in a given zip code for a given month and year.')
                                             dpg.add_separator()
                                             with dpg.group(horizontal=True):
-                                                dpg.add_plot(width=480, height=450)
+                                                with dpg.plot(width=480, height=450) as self.sales_per_zip_plot:
+                                                    self.sales_per_zip_plot_x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Month")
+                                                    dpg.set_axis_limits(dpg.last_item(), 1, 12)
+                                                    ticks = [[f"{str(num)}", num] for num in range(1, 13)]
+                                                    print(ticks)
+
+                                                    dpg.set_axis_ticks(self.sales_per_zip_plot_x_axis, ticks)
+
+                                                    self.sales_per_zip_plot_revenue = dpg.add_plot_axis(dpg.mvYAxis, label="Sales Revenue")
+                                                    self.sales_per_zip_plot_line = dpg.add_area_series(self.total_dates, 
+                                                                        self.total_purchaes, 
+                                                                        parent=self.sales_per_zip_plot_revenue, 
+                                                                        label='Total sales Revenue per Zipcode in 2018',
+                                                                        fill=[[0, 225, 0]]
+                                                                        )
                                                 with dpg.group():
                                                     dpg.add_text('Zip codes:')
-                                                    dpg.add_input_text(width=-1, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
+                                                    dpg.add_input_text(width=200, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
                                                     with dpg.tooltip(dpg.last_item()):
                                                         dpg.add_text('Filter list')
                                                     
                                                     # will populate with zip codes
-                                                    with dpg.child_window(width=-1, height=160) as self.zipcodes:
+                                                    with dpg.child_window(width=200, height=160) as self.zipcodes:
                                                         pass
                                                         with dpg.filter_set() as self.zip_filter_set:
                                                             pass
                                                     
 
-                                                    dpg.add_date_picker(level=dpg.mvDatePickerLevel_Month, default_value={'month_day':1, 'year':2018, 'month':1})
-                                                    dpg.add_button(label='Search', width=-1)
-                                            
-                                            with dpg.collapsing_header(label='Transactions per Zipcode:'):
-                                                with dpg.child_window(height=400, width=-1):
+                                                    #dpg.add_date_picker(level=dpg.mvDatePickerLevel_Month, default_value={'year':118, 'month':0}, callback=lambda a, s, u: print(a, s, u))
+                                                    
+                                                
+                                                    with dpg.group():  # custom calendar b/c I don't need dates as granular as days for this data                                                            
+                                                        date_data = dpg.add_listbox(items=[2018], num_items=2, width=200) 
+                                                        with dpg.group(horizontal=True, horizontal_spacing=0):
+                                                            dpg.add_button(height=50, width=50, label='Jan', user_data=1)
+                                                            dpg.add_button(height=50, width=50, label='Feb', user_data=2)
+                                                            dpg.add_button(height=50, width=50, label='Mar', user_data=3)
+                                                            dpg.add_button(height=50, width=50, label='Apr', user_data=4)
+                                                        
+                                                        with dpg.group(horizontal=True, horizontal_spacing=0):
+                                                            dpg.add_button(height=50, width=50, label='May', user_data=5)
+                                                            dpg.add_button(height=50, width=50, label='Jun', user_data=6)
+                                                            dpg.add_button(height=50, width=50, label='Jul', user_data=7)
+                                                            dpg.add_button(height=50, width=50, label='Aug', user_data=8)
+                                                            
+                                                        with dpg.group(horizontal=True, horizontal_spacing=0):
+                                                            dpg.add_button(height=50, width=50, label='Sep', user_data=9)
+                                                            dpg.add_button(height=50, width=50, label='Oct', user_data=10)
+                                                            dpg.add_button(height=50, width=50, label='Nov', user_data=11)
+                                                            dpg.add_button(height=50, width=50, label='Dec', user_data=12)
+                                                    
+                                                    with dpg.tooltip(date_data):
+                                                        dpg.add_text('This dataset contains data from 2018 only')        
+                                                        
+
+
+                                                    
+                                                    dpg.add_button(label='Search', width= 200)
+                                            dpg.add_separator()
+                                            with dpg.tree_node(label='Transactions per Zipcode:'):
+                                                with dpg.child_window(height=400, width=-1, border=False):
                                                     with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                                                                 resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
                                                                 borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transactions_per_zip:

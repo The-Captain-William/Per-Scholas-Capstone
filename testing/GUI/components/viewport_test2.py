@@ -4,6 +4,11 @@ from connection_class import ConnectionHandler
 from mysql.connector import Error as DBError
 from classes import Login, QueryPortal, SaapPortal
 
+# TODO:
+# create date and buttons dropdown or find a way to fix date module
+# more filtering based off of dates
+# graphs
+
 
 if __name__ == "__main__":
     try:
