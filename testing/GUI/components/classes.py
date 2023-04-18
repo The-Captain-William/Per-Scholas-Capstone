@@ -1,4 +1,5 @@
 import dearpygui.dearpygui as dpg
+import numpy as np
 from types import FunctionType
 from typing import Optional, Union
 from connection_class import ConnectionHandler
@@ -307,7 +308,9 @@ class SaapPortal(GenericContainerContext):
         self.zipcode_list_selection = None 
         self.currently_selected_state = None
         self.type_list_selection = None
-        
+        self.zip_list_selection = None
+        self.zipcode_state_list_selection = None
+
         #### DATASET CONTAINERS #### 
         self.total_sales = [] 
         self.total_dates = []
@@ -324,6 +327,10 @@ class SaapPortal(GenericContainerContext):
         # pie chart, transaction types and values given current state
         self.transaction_value_per_type_given_state = []
         self.transaction_value_per_type_given_state_strings = []
+
+        # data for region
+        self.zips_for_region = []
+        
 
 
     def __setup(self, connection: ConnectionHandler):
@@ -363,7 +370,11 @@ class SaapPortal(GenericContainerContext):
             pass
         else:
             if sender != current_item:
-                dpg.set_value(current_item, False)
+                try:
+                    dpg.set_value(current_item, False)
+                except:
+                    pass
+        
         current_item = sender
         return current_item
 
@@ -371,37 +382,54 @@ class SaapPortal(GenericContainerContext):
         self.state_transactions_year = []
         self.total_transactions_year = []  # add this to init
         self.state_vs_total_transactions_x = []  # add this to init as well
-        query = f"""
+        query_state_transaction_value = f"""
         SELECT 
+            /*
+            Comparing Total Monthly revenue for the company vs the state
+            */
             `Total Transaction Value`, 
             `Transaction Value for State`, 
             t.Month, 
             CONCAT('$', FORMAT(`Total Transaction Value`, 2)) AS `Formatted Total`, 
             CONCAT('$', FORMAT(`Transaction Value for State`, 2)) AS `Formatted State`
         FROM 
+            /*
+            Sum the transaction values, 
+            get the month of a given transaction, 
+            from the view I created
+            group by month
+            make a temp table t
+            */ 
             (SELECT
             round(sum(transaction_value), 2) AS `Total Transaction Value`,
             MONTH(timeid) AS Month  
             FROM saap_portal_breakdown
             GROUP BY Month) t
-
+            /*
+            sum transaction values,
+            get month
+            from view I created
+            where customer state is user selection
+            group by month s
+            */
         JOIN 
             (SELECT round(sum(transaction_value), 2) AS `Transaction Value for State`,
             MONTH(timeid) AS Month
             FROM saap_portal_breakdown
             WHERE cust_state = '{user_data}'
             GROUP BY Month) s 
-            ON 
-            t.Month = s.Month
+            ON t.Month = s.Month;
         """
-        self.connection.cur_execute(self.tag, query, database='db_capstone')
+        self.connection.cur_execute(self.tag, query_state_transaction_value, database='db_capstone')
 
-        for num, row in enumerate(self.connection[self.tag][query]):
-            if num != 0:
-                self.total_transactions_year.insert(num, row[0])
-                self.state_transactions_year.insert(num, row[1])
-                self.state_vs_total_transactions_x.insert(num, row[2]) 
+
+        for index, row in enumerate(self.connection[self.tag][query_state_transaction_value]):
+            if index != 0:
+                self.total_transactions_year.insert(index, row[0])
+                self.state_transactions_year.insert(index, row[1])
+                self.state_vs_total_transactions_x.insert(index, row[2]) 
         
+        # TODO Refactor, set up as a dict like the setup function for this class
         dpg.configure_item(self.plot_company_linechart,
                            x=self.state_vs_total_transactions_x,
                            y=self.total_transactions_year)
@@ -410,35 +438,108 @@ class SaapPortal(GenericContainerContext):
                            x=self.state_vs_total_transactions_x,
                             y=self.state_transactions_year)
         
+        # dpg.configure_item(self.plot_state_linechart_borrowed,
+        #                    x=self.state_vs_total_transactions_x,
+        #                    y=self.state_transactions_year)
+
         ymin = min(self.total_transactions_year) 
         state_ymin = min(self.state_transactions_year) 
         state_ymax = max(self.state_transactions_year) 
-        ymax = max(self.total_transactions_year)
-        state_share = sum(self.state_transactions_year)
-        total_share = sum(self.total_transactions_year)
+        self.ymax = max(self.total_transactions_year)
+        state_share = np.sum(self.state_transactions_year)
+        total_share = np.sum(self.total_transactions_year)
+        #state_share = sum(self.state_transactions_year)
+        #total_share = sum(self.total_transactions_year)
     
 
-        dpg.set_axis_limits(self.plot_y_axis_company, (ymin * .99), (ymax * 1.009))
+        dpg.set_axis_limits(self.plot_y_axis_company, (ymin * .99), (self.ymax * 1.009))
         dpg.set_axis_limits(self.plot_y_axis_state, (state_ymin * .99), (state_ymax * 1.009))
 
         dpg.configure_item(self.pie_state_company, 
                            values=[state_share, total_share],
                            labels=[user_data, 'Company'])
         
+
+        # kind of wonky code formatting but it has to be like this for now.
+        # GUI does not handle carriage returns or backspaces. 
         report_string = \
         f""" 
-{user_data}'s transaction volume represents {round((state_share/total_share), 3) * 100}% of the companies total transactions for 2018.\n
+{user_data}'s transaction volume represents {np.format_float_positional((state_share/total_share) * 100, precision=2)}% of the companies total transactions for 2018.\n
 {user_data}'s transaction volume yearly low ${state_ymin:,}.\n
 {user_data}'s transaction volume yearly high ${state_ymax:,}
         """
-        # kind of wonky code formatting but it has to be like this for now.
 
         dpg.configure_item(self.report_text, default_value=report_string,)
 
+        self.zip_for_state_report_query(user_data)
+        
 
 
 
 
+    def zip_for_state_report_query(self, user_data):
+        """
+        This will provide a list of zips related to the selected state.
+        State is selected through state_report_query 
+        """
+        dpg.delete_item(self.zip_state_filter_set, children_only=True)
+
+        query_zips_for_state = f"""
+        SELECT 
+                *, 
+                CONCAT('$', FORMAT(`Sum Transaction per Zip`, 2)) AS `Formatted Zip Sum`, 
+                CONCAT('$', FORMAT(`State Transaction Revenue`, 2)) AS `Formatted State Revenue`, 
+                ROUND((`Sum Transaction per Zip` / `State Transaction Revenue` ) * 100, 2) AS `Percentage of Revenue to State`
+        FROM 
+            /*
+            custom table made of:
+            customer state,
+            customer zip codes,
+            sum of all transaction values (per zip), *
+            sum of all state revenue (select subquery),
+            grouped by zip (to divide sum of all transaction values) *
+            NOTE: 
+            The only reason why I have this custom table is so I can have formatted tables on the outside, and perform a percentage per zip operation on these aggrigations
+            */
+            (SELECT
+                cust_state AS `State`,
+                cust_zip AS Zip,
+                ROUND(sum(transaction_value), 2) AS `Sum Transaction per Zip`,
+                (
+                    SELECT 
+                        ROUND(SUM(transaction_value), 2) 
+                    FROM 
+                        saap_portal_breakdown 
+                        WHERE cust_state = '{user_data}') AS `State Transaction Revenue`
+                        -- looking for total state revenue
+                FROM saap_portal_breakdown WHERE cust_state = '{user_data}'
+                GROUP BY cust_zip) t 
+        ORDER BY 7 DESC;
+        """
+        # this is 147% faster than another join I made
+        # recap:
+        # 0 state 1 zip # 2 sum (per zip) # 3 sum (entire state) # 4 format of sum (per zip) # 5 format of sum (per state)  # 6 percent
+        self.connection.cur_execute(self.tag, query_zips_for_state, database='db_capstone', headers=True)
+
+        self.zips_for_region = []
+        region_contribution_to_state = []
+
+
+        for index, row in enumerate(self.connection[self.tag][query_zips_for_state]):
+            
+            if index != 0:
+                self.zips_for_region.insert(index - 1, row[1])
+                region_contribution_to_state.insert(index - 1, row[6])
+
+
+        self._create_dropdown_filter(self.zips_for_region,
+                                     parent_window=self.zip_state_filter_set,
+                                     callback=self.zip_state_callback)
+        
+        print(region_contribution_to_state)
+        dpg.configure_item(self.pie_state_region, 
+                           values=region_contribution_to_state,
+                           labels=self.zips_for_region)
 
 
 
@@ -450,6 +551,8 @@ class SaapPortal(GenericContainerContext):
         # the state. 
 
         self.transaction_value_per_type_given_state = []
+
+        # transaction type, transaction value, formatted transaction values
         def create_query(user_data):
             query = f"""SELECT
 		            *, 
@@ -492,6 +595,78 @@ class SaapPortal(GenericContainerContext):
         self.state_report_query(user_data)
         
 
+    # callback has to be tied to select one like this for now
+    def zip_state_callback(self, sender, app_data, user_data):
+
+        # per month
+        
+        zipcode_number_of_transactions = []
+        zipcode_transaction_value = []
+        zipcode_transaction_value_average = []
+        zipcode_month = []
+        
+
+        query = f"""
+        SELECT 
+            COUNT(*) AS `Number of Transactions`, 
+            ROUND(SUM(transaction_value), 2) AS `Total Sales for Month`,
+            MONTH(timeid) AS `Month`,
+            ROUND(avg(transaction_value), 2) AS `Average Transaction Value`
+        FROM saap_portal_breakdown
+        WHERE cust_zip = '{user_data}'
+        GROUP BY `Month`
+        ORDER BY 3;
+        """
+
+        
+        self.zipcode_state_list_selection = self._select_one(sender, current_item=self.zipcode_state_list_selection)
+        self.connection.cur_execute(self.tag, query, database='db_capstone')
+
+        # 0 transaction count; 1 transaction value, 2 month, 3 average  
+        for index, row in enumerate(self.connection[self.tag][query]):
+            if index != 0:
+                zipcode_number_of_transactions.insert(index - 1, row[0])
+                zipcode_transaction_value.insert(index - 1, row[1])
+                zipcode_month.insert(index - 1, row[2])
+                zipcode_transaction_value_average.insert(index - 1, row[3])
+
+
+        # offset 1 is placed on 1, 4, 7
+        # offset 2 is placed on 2, 5, 8
+        # 3, 6, 9 are empty spaces for breathing room
+        month_offset_1 = [num for num in range(1, 37, 3)]
+        month_offset_2 = [num for num in range(2, 37, 3)]
+        
+
+        # print(month_offset_1)
+        # print(month_offset_2)
+            
+
+        dpg.delete_item(self.plot_y_axis_zip, children_only=True)
+        
+        # each 1 tick is actually 3 units long
+        # 1[2]-3, 4[5]-6, 7[8]-9, 10[11]-12
+        # month1, month2, month3, month4
+        dpg.set_axis_ticks(self.plot_x_axis_zip, [[str(num), num * 3 ] for num in range(1, 13)])
+
+        
+        dpg.set_axis_limits(self.plot_y_axis_zip, 
+                            0, 
+                            max(zipcode_transaction_value_average) * 1.099)
+        
+        dpg.set_axis_limits(self.plot_x_axis_zip, 0, 36)
+
+            
+        dpg.add_bar_series(month_offset_1, 
+                           zipcode_number_of_transactions, 
+                           label=self.connection[self.tag][query][0][0],
+                           parent=self.plot_y_axis_zip)
+
+        
+        dpg.add_bar_series(month_offset_2, 
+                           zipcode_transaction_value_average, 
+                           label=self.connection[self.tag][query][0][3],
+                           parent=self.plot_y_axis_zip)
 
 
     # callback has to be tied to select one like this for now
@@ -696,7 +871,7 @@ class SaapPortal(GenericContainerContext):
                                                     dpg.add_plot_legend()
                                                     
                                                     # x axis
-                                                    self.piechart_state_x_axis = dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+                                                    self.piechart_state_x_axis = dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True, label='Transaction Value by State')
 
                                                     
                                                     
@@ -727,7 +902,9 @@ class SaapPortal(GenericContainerContext):
                                                         dpg.add_text('This dataset contains data from 2018 only')    
                                                     
                                                     dpg.add_button(label='Show Data', width=200, callback=lambda: dpg.configure_item(self.state_popout_window, show=True, pos=dpg.get_mouse_pos()))                                    
-                                                    dpg.add_button(label='Show Report', width=200, callback= lambda: dpg.configure_item(self.state_report, show=True, pos=dpg.get_mouse_pos))
+                                                    dpg.add_button(label='State Report', width=200, callback= lambda: dpg.configure_item(self.state_report, show=True, pos=dpg.get_mouse_pos()))
+                                                    dpg.add_button(label='Region Report', width=200, callback= lambda: dpg.configure_item(self.region_report, show=True, pos=dpg.get_mouse_pos()))
+
 
                                             with dpg.window(label='State Report', show=False) as self.state_report:
                                                 with dpg.group(horizontal=True, parent=self.state_report):
@@ -752,8 +929,8 @@ class SaapPortal(GenericContainerContext):
                                                             dpg.set_axis_limits(self.plot_y_axis_company, 0, 1000)
 
                                                             # ticks
-                                                            x_ticks = [[f"{str(num)}", num] for num in range(1, 13)]
-                                                            dpg.set_axis_ticks(self.plot_x_axis_company, x_ticks)
+                                                            self.x_ticks = [[f"{str(num)}", num] for num in range(1, 13)]
+                                                            dpg.set_axis_ticks(self.plot_x_axis_company, self.x_ticks)
 
                                                         with dpg.plot(label='State Transactions', anti_aliased=True) as self.plot_state_vs_company_transactions_2:
                                                             self.plot_x_axis_state = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
@@ -768,7 +945,7 @@ class SaapPortal(GenericContainerContext):
                                                             )
                                                             
                                                             dpg.set_axis_limits(self.plot_x_axis_state, 1, 12)
-                                                            dpg.set_axis_ticks(self.plot_x_axis_state, x_ticks)
+                                                            dpg.set_axis_ticks(self.plot_x_axis_state, self.x_ticks)
 
 
                                                     with dpg.group() as self.piechart_report_group:
@@ -796,7 +973,59 @@ class SaapPortal(GenericContainerContext):
                                                         self.report_text = dpg.add_text(wrap=200)
                                                                             
                                                         
+                                            with dpg.window(label='Region Report', show=False) as self.region_report:
+                                                with dpg.group(horizontal=True):
+                                                    with dpg.group():
+                                                        with dpg.plot(label='Region Contribution to State Transaction', anti_aliased=True, equal_aspects=True):
+                                                            dpg.add_plot_legend()
+                                                    
+                                                            # x axis
+                                                            dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+                                                            
+                                                            
+                                                                # axis limits
+                                                                #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
+                                                                #dpg.set_axis_limits()
+                                                            
+                                                                # plot, pie chart ⭐
+                                                            with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.region_state_percent:
+                                                                #state_over_company = self.state_transactions_year / self.total_transactions_year
+
+                                                                self.pie_state_region = dpg.add_pie_series(0.5, 0.5, 0.5,
+                                                                            [], 
+                                                                            [],
+                                                                            format='%0.2f')
+
+
+                                                    with dpg.group():
+                                                        dpg.add_text('Zip codes:')
+                                                        dpg.add_input_text(width=200, callback=lambda s, a: dpg.set_value(self.zip_state_filter_set, a))
+                                                        with dpg.tooltip(dpg.last_item()):
+                                                            dpg.add_text('Filter list')
                                                         
+                                                        # will populate with zip codes
+                                                        with dpg.child_window(width=200, height=160) as self.zipcodes_by_state:
+                                                            with dpg.filter_set() as self.zip_state_filter_set:
+                                                                pass
+
+                                                        
+                                                    dpg.add_text("Region Report")
+                                                    dpg.add_separator()
+
+                                                with dpg.group():
+                                                    with dpg.plot(label='Transaction Count and Volume', anti_aliased=True) as self.plot_state_vs_company_transactions_2:
+                                                        
+                                                        dpg.add_plot_legend()
+
+
+                                                        self.plot_x_axis_zip = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
+                                                        
+                                                        self.plot_y_axis_zip = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Value')
+
+                                                        dpg.set_axis_limits(self.plot_x_axis_zip, 1, 24)
+                                                        #dpg.set_axis_ticks(self.plot_x_axis_zip, self.x_ticks)
+
+
                                                         
 
                                             # Sql Table show 
