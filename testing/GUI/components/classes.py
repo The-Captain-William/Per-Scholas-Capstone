@@ -667,7 +667,18 @@ class SaapPortal(GenericContainerContext):
                            zipcode_transaction_value_average, 
                            label=self.connection[self.tag][query][0][3],
                            parent=self.plot_y_axis_zip)
+        
+        dpg.configure_item(self.plot_zip_linechart,
+                           x=self.state_vs_total_transactions_x,
+                           y=zipcode_transaction_value)
+        
+        print(zipcode_transaction_value)
+        dpg.set_axis_limits(self.plot_y_axis_zip_timeseries,
+                            min(zipcode_transaction_value) * 0.99,
+                            max(zipcode_transaction_value) * 1.099)
 
+
+        self._window_query_results(self.connection[self.tag][query], parent=self.query_transaction_value_per_type_given_zip)
 
     # callback has to be tied to select one like this for now
     def zip_callback(self, sender, app_data, user_data):
@@ -1004,13 +1015,18 @@ class SaapPortal(GenericContainerContext):
                                                             dpg.add_text('Filter list')
                                                         
                                                         # will populate with zip codes
-                                                        with dpg.child_window(width=200, height=160) as self.zipcodes_by_state:
-                                                            with dpg.filter_set() as self.zip_state_filter_set:
-                                                                pass
+                                                        with dpg.group():
+                                                            with dpg.child_window(width=200, height=160) as self.zipcodes_by_state:
+                                                                with dpg.filter_set() as self.zip_state_filter_set:
+                                                                    pass
+                                                            dpg.add_button(label='Show Data', width=200, callback=lambda: dpg.configure_item(self.state_zip_popout_window, show=True, pos=dpg.get_mouse_pos()))
+                                                        
+                                                    
 
                                                         
                                                     dpg.add_text("Region Report")
                                                     dpg.add_separator()
+                                                
 
                                                 with dpg.group():
                                                     with dpg.plot(label='Transaction Count and Volume', anti_aliased=True) as self.plot_state_vs_company_transactions_2:
@@ -1025,10 +1041,40 @@ class SaapPortal(GenericContainerContext):
                                                         dpg.set_axis_limits(self.plot_x_axis_zip, 1, 24)
                                                         #dpg.set_axis_ticks(self.plot_x_axis_zip, self.x_ticks)
 
-
+                                        
+                                        
+                                                    with dpg.plot(label='Zip Transaction Volume per Month', anti_aliased=True) as self.plot_zip_timeseries:
+                                                        self.plot_x_axis_zip_timeseries = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
                                                         
 
-                                            # Sql Table show 
+                                                        self.plot_y_axis_zip_timeseries = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Value')
+
+                                                        self.plot_zip_linechart = dpg.add_line_series(x=self.state_vs_total_transactions_x,
+                                                                                                      y=[],
+                                                                                                      parent=self.plot_y_axis_zip_timeseries)
+                                                        # NOTE: refactor
+                                                                                                                                                                                                                                       
+                                                        dpg.set_axis_limits(self.plot_x_axis_zip_timeseries, 1, 12)
+                                                        dpg.set_axis_ticks(self.plot_x_axis_zip_timeseries, self.x_ticks)
+                                        
+                                        # SQL TABLES
+
+                                            # Region
+                                            with dpg.window(label='Transactions by Region Breakdown', show=False, width=566, height=329) as self.state_zip_popout_window:
+                                                with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                            resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                            borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_zip:
+                                                            pass  
+                                                
+                                            # # tbd
+                                            # with dpg.window(label='Transactions by State Breakdown', show=False, width=475, height=214) as self.state_popout_window:
+                                            #     with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                            #                 resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                            #                 borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_state:
+                                            #                 pass          
+
+
+                                            # State
                                             with dpg.window(label='Transactions by State Breakdown', show=False, width=475, height=214) as self.state_popout_window:
                                                 with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                                                             resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
