@@ -47,20 +47,48 @@ class GenericContainerContext:
         state = dpg.get_item_state(self.tag)['visible']  # get item state returns dict, dict ['visible'] returns bool
         dpg.configure_item(self.tag, show=not state)  # negate bool
 
-    def _window_query_results(self, results: list, parent: str | int):
+
+
+
+    def _window_query_results(self, results: list, parent: str | int, button_column_number: Optional[int] = None):
+
         """
         Displays query results for a window
         """
         self.contents = results
         dpg.delete_item(parent, children_only=True)
 
+
+
         for column_name in results[0]: # initiate headers
             dpg.add_table_column(label=column_name, parent=parent, width_stretch=False)
         
-        for row in results[1:]:  # initiate results
-            with dpg.table_row(parent=parent):
-                for value in row:
-                        dpg.add_text(value, wrap=300)
+        if button_column_number != None:
+            with dpg.theme() as theme:
+                with dpg.theme_component(dpg.mvButton):
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 15)
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, [32, 160, 192])
+                    
+
+
+                
+
+            for row in results[1:]:  # initiate results
+                with dpg.table_row(parent=parent):
+                    for index, value in enumerate(row):
+                        if index == button_column_number:
+                            dpg.add_button(label=value, width=40, user_data=value, callback=self.edit_mode)
+                            #dpg.add_selectable(label=value, width=40, user_data=value, callback=self.edit_mode)
+                            dpg.bind_item_theme(dpg.last_item(), theme)
+
+                        else:
+                            dpg.add_text(value, wrap=300)
+        
+        else:
+            for row in results[1:]:  # initiate results
+                with dpg.table_row(parent=parent):
+                    for value in row:
+                            dpg.add_text(value, wrap=300)
 
 
 class Login(GenericContainerContext):
@@ -311,6 +339,8 @@ class SaapPortal(GenericContainerContext):
         self.zip_list_selection = None
         self.zipcode_state_list_selection = None
 
+        self.edit_customer_button_array = {}
+
         #### DATASET CONTAINERS #### 
         self.total_sales = [] 
         self.total_dates = []
@@ -330,6 +360,8 @@ class SaapPortal(GenericContainerContext):
 
         # data for region
         self.zips_for_region = []
+
+
         
 
 
@@ -362,7 +394,150 @@ class SaapPortal(GenericContainerContext):
             callback = self.state_callback
         super()._create_dropdown_filter(collection, parent_window, callback)  # will iterate through from the parent class, then I can extend functionality
             
-    
+
+    def edit_mode(self, sender, app_data, user_data):
+
+        parent = dpg.get_item_info(sender)['parent']
+        blue = [32, 160, 192]
+        red = [255, 51, 85]
+        yellow = [0, 51, 77]
+        highlight_blue = [96, 155, 197, 132]
+        
+        def change_color_button(color, button):
+            with dpg.theme() as theme:
+                with dpg.theme_component(dpg.mvButton):
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 15)
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, color)
+            dpg.bind_item_theme(button, theme)
+
+        def highlight_selection(item, color):
+            with dpg.theme() as theme:
+                with dpg.theme_component(dpg.mvInputText):
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 12)
+                    dpg.add_theme_color(dpg.mvThemeCol_FrameBg, color)
+                    dpg.add_theme_style(dpg.mvStyleVar_CellPadding, 10)
+            dpg.bind_item_theme(item, theme)
+
+
+
+        # mythemeCol_Framebackground # highlighted text
+        # default: 51, 51, 55, 255
+        #(96,155,197,132)
+        # mystylevar cell padding 6, 10
+        # frame rounding 12
+
+        if sender not in self.edit_customer_button_array:
+            # local array consists of all values per item
+            # steps:
+            # change button color
+            # delete all text items but keep their values in local array
+            # create input items with default values using local array
+            # do for all except button, SSN, and datetime
+            # assign array to self.dict with sender (customer ID button) as key
+            local_array = []            
+            change_color_button(red, sender)
+            for index, item in enumerate(range(sender + 2, sender + 14)):  # skip cust ID, SSN, 
+                local_array.append(dpg.get_value(item))
+                dpg.delete_item(item)  # have to delete item first, can not instantiate and configure tag ID
+                if item !=sender + 13:
+                    dpg.add_input_text(default_value=local_array[-1], parent=parent, tag=item, width=-1)
+                elif item == sender + 13:
+                    dpg.add_text("(Will Update Automatically)", parent=parent, tag=item)
+                highlight_selection(item, highlight_blue)
+                
+                # highlight rows
+                # cust_id = self.connection[self.tag][self.customer_query][index][0]
+
+                # if cust_id == user_data:
+                #     print(dpg.get_item_theme(sender))
+                #     dpg.highlight_table_row(self.customer_table, row=index - 1, color=yellow)
+
+
+                    
+
+
+            self.edit_customer_button_array[sender] = local_array
+
+        
+        elif sender in self.edit_customer_button_array:
+            # steps
+            # if sender is a key in self.dict
+            # delete all input items
+            # re-create text items from self.dict array values
+            # delete the array
+            # change button color 
+
+            # NOTE: 
+            # calling a function within a function from a popout window
+
+            def cancel_changes():
+                for index, item in enumerate(range(sender + 2, sender + 14)):
+                    dpg.delete_item(item)
+                    dpg.add_text(default_value=self.edit_customer_button_array[sender][index], 
+                                    parent=parent, 
+                                    tag=item)
+                self.edit_customer_button_array.pop(sender)
+                change_color_button(blue, sender)
+                dpg.configure_item(confirmation, show=False)
+
+            def commit_changes():
+                local_array = [dpg.get_value(item) for item in range(sender + 2, sender + 13)]
+                print(local_array)
+                with dpg.group(parent=confirmation, before=choices):
+                    with dpg.group(horizontal=True):
+                        for item in local_array:
+                            dpg.add_text(color=red, default_value=item)
+                dpg.configure_item(confirm, default_value='Are you Sure?')
+                dpg.configure_item(yes, callback=lambda: print("okay"))
+
+
+
+            with dpg.window(popup=True, pos=dpg.get_mouse_pos()) as confirmation:  # dpg.window(popout=True) is snappier than dpg.popout
+                confirm = dpg.add_text('Commit Changes?')
+                with dpg.group(horizontal=True) as choices:
+                    yes = dpg.add_button(label='Yes', callback=commit_changes)
+                    dpg.add_button(label='Cancel', callback=cancel_changes)
+                    dpg.add_button(label='Go back', callback=lambda: dpg.configure_item(confirmation, show=False), parent=choices)
+
+
+
+    def refresh_search_like_input(self):
+        dpg.delete_item(self.customer_table, children_only=True)
+        self.search_like_input()
+
+        
+    def search_like_input(self):
+        contents_firstname = dpg.get_value(self.first_name)
+        contents_lastname = dpg.get_value(self.last_name)
+
+        if contents_lastname !=None or contents_lastname != None:
+
+            if (len(contents_firstname) and len(contents_lastname) !=0) and \
+                (contents_firstname !=None and contents_lastname !=None):
+                self.customer_query = f"""
+                SELECT * FROM cdw_sapp_customer
+                WHERE first_name LIKE('{contents_firstname}%') AND last_name LIKE ('{contents_lastname}%')
+                LIMIT 100;
+                """            
+            elif (len(contents_firstname) !=0 and contents_firstname !=None):
+                self.customer_query = f"""
+                SELECT * FROM cdw_sapp_customer
+                WHERE first_name LIKE('{contents_firstname}%')
+                LIMIT 100;
+                """            
+            elif (len(contents_lastname) !=0 and contents_lastname !=None):
+                self.customer_query = f"""
+                SELECT * FROM cdw_sapp_customer
+                WHERE last_name LIKE ('{contents_lastname}%')
+                LIMIT 100;
+                """
+            
+            try:
+                self.connection.cur_execute(self.tag, self.customer_query, database='db_capstone')
+                self._window_query_results(self.connection[self.tag][self.customer_query], parent=self.customer_table, button_column_number=0)
+                self.edit_customer_button_array = {}
+            except UnboundLocalError:
+                dpg.delete_item(self.customer_table, children_only=True)
 
 
     def _select_one(self, sender: str | int, current_item: str | int, app_data: Optional[Union[str, int]] = None, user_data: Optional[Union[str, int]] = None):
@@ -1101,22 +1276,51 @@ class SaapPortal(GenericContainerContext):
                                                     with dpg.group(horizontal=True):
                                                         with dpg.group():
                                                             dpg.add_text('First name')
-                                                            dpg.add_input_text(tag='first-name', width=90)
+                                                            self.first_name = dpg.add_input_text(tag='first-name', width=90)
                                                         with dpg.group():
                                                             dpg.add_text('Last name')
-                                                            dpg.add_input_text(tag='last-name', width=90)
+                                                            self.last_name = dpg.add_input_text(tag='last-name', width=90)
                                                         with dpg.group():
                                                             dpg.add_text('cust_id')
                                                             dpg.add_input_text(tag='Cust-id', width=90)
                                                     dpg.add_spacer()
-                                                    dpg.add_button(label='Search', width=286)
-                                                    
+                                                    def clear():
+                                                        dpg.set_value(self.first_name, '')
+                                                        dpg.set_value(self.last_name, '')
+                                                        dpg.delete_item(self.customer_table, children_only=True)
+
+                                                    dpg.add_button(label='Clear', width=286, callback=clear)
+
+
+
+
+
+                                                with dpg.item_handler_registry() as search_names:
+                                                    #dpg.add_item_edited_handler(callback=lambda s, a, u: print(s, a, u, dpg.get_value(a)))
+                                                    dpg.add_item_edited_handler(callback=self.search_like_input)
+
+                                                dpg.bind_item_handler_registry(self.first_name, search_names)
+                                                dpg.bind_item_handler_registry(self.last_name, search_names)
+
+
+                                                
+
+
+
+
+
+
                                                 # left side                                                    
                                                 with dpg.child_window(width=330, height=450):                                                                                                                                                                      
                                                     dpg.add_text('Customer Report:')
                                                     dpg.add_text('Lifetime Value')
+                                                
+                                            dpg.add_text('Results')
 
-
+                                            with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                        resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                        borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.customer_table:
+                                                        pass  
 
 
 
