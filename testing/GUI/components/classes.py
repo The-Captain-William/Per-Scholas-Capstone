@@ -343,6 +343,7 @@ class SaapPortal(GenericContainerContext):
         self.type_list_selection = None
         self.zip_list_selection = None
         self.zipcode_state_list_selection = None
+        self.reporting = "Edit Mode"
 
         self.edit_customer_button_array = {}
 
@@ -401,15 +402,33 @@ class SaapPortal(GenericContainerContext):
         super()._create_dropdown_filter(collection, parent_window, callback)  # will iterate through from the parent class, then I can extend functionality
             
 
+    def edit_or_report_mode(self, sender, app_data, user_data):
+        self.reporting = app_data
+
+
+    def customer_button(self, sender, app_data, user_data):
+        if self.reporting == "Edit Mode":
+            self.edit_mode(sender, app_data, user_data)
+        else:
+            print(sender, app_data, user_data)
+
+
+    def report_mode(self, sender, app_data, user_data):
+        parent = dpg.get_item_info(sender)['parent']
+        cust_id = user_data
+
+
     def edit_mode(self, sender, app_data, user_data):
+
 
         parent = dpg.get_item_info(sender)['parent']  # row holding items
         blue = [32, 160, 192]
         red = [255, 51, 85]
         highlight_blue = [96, 155, 197, 132]
         cust_id = user_data
-
-
+        hold_this_index = None
+        print(self.reporting)
+        
         def change_color_button(color, button):
             with dpg.theme() as theme:
                 with dpg.theme_component(dpg.mvButton):
@@ -443,6 +462,9 @@ class SaapPortal(GenericContainerContext):
             # assign array to self.dict with sender (customer ID button) as key
             cust_id_row_values = []            
             change_color_button(red, sender)
+            print(dpg.get_item_info(self.customer_table))
+            print(parent)
+
             for index, item in enumerate(range(sender + 2, sender + 14)):  # skip cust ID, SSN, 
                 cust_id_row_values.append(dpg.get_value(item))
                 dpg.delete_item(item)  # have to delete item first, can not instantiate and configure tag ID
@@ -452,11 +474,32 @@ class SaapPortal(GenericContainerContext):
                     dpg.add_text("(Will Update Automatically)", parent=parent, tag=item)
                 highlight_selection(item, highlight_blue)
                 
+                # as the iterator runs through the row (horizontal), I'm taking advantage and having a search
+                # vertical, looking to see where the buttons place is relative to its surroundings
 
-                cust_id_in_row = self.connection[self.tag][self.customer_query][index][0]
+                # with this technique, I don't need to search through an entire table, just within 0 to 13
+                # run through and search for the rows place in the table
 
-                if cust_id == cust_id_in_row:
-                    hold_this_index = index
+                # as you approach the limit of the table, you'll hit an error if your search table is longer than 13
+                # this will require a different algorithm, and here I'm searching through all the given rows
+
+
+                try:  
+                    cust_id_in_row = self.connection[self.tag][self.customer_query][index][0]
+                    if cust_id == cust_id_in_row:
+                        hold_this_index = index
+                except IndexError:
+                    pass
+                    
+            if hold_this_index is None:
+                print(sender)
+                for index, item in enumerate(dpg.get_item_info(self.customer_table)['children'][1]):
+                    print(item)
+                    if item == sender:
+                        hold_this_index = index
+        
+
+
                     
             self.edit_customer_button_array[sender] = cust_id_row_values
             cust_id_row_values.append(hold_this_index)
@@ -596,8 +639,10 @@ class SaapPortal(GenericContainerContext):
                 self._window_query_results(self.connection[self.tag][self.customer_query], 
                                             parent=self.customer_table, 
                                             button_column_number=0, 
-                                            button_callback=self.edit_mode)
+                                            button_callback=self.customer_button)
                 self.edit_customer_button_array = {}
+
+
 
                 
             except UnboundLocalError:
@@ -1378,8 +1423,11 @@ class SaapPortal(GenericContainerContext):
                                                 with dpg.child_window(width=330, height=450):                                                                                                                                                                      
                                                     dpg.add_text('Customer Report:')
                                                     dpg.add_text('Lifetime Value')
-                                                
-                                            dpg.add_text('Results')
+                                            
+                                            with dpg.group(horizontal=True):
+                                                dpg.add_text('Results')
+                                                dpg.add_radio_button(("Edit Mode", "Report Mode"), callback=self.edit_or_report_mode, horizontal=True)
+
 
                                             with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                                                         resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
