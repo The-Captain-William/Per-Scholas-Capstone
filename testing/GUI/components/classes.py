@@ -6,7 +6,6 @@ from connection_class import ConnectionHandler
 from mysql.connector import Error as DBError
 from contextlib import contextmanager
 
-
 class GenericContainerContext:
     def __init__(self, container_tag: str, *args, **kwargs):
             self.kwargs = kwargs
@@ -55,7 +54,10 @@ class GenericContainerContext:
 
 
 
-    def _window_query_results(self, results: list, parent: str | int, button_column_number: Optional[int] = None, button_callback: Optional[FunctionType] = None):
+    def _window_query_results(self, 
+        results: list, parent: str | int, 
+        button_column_number: Optional[int] = None, 
+        button_callback: Optional[FunctionType] = None):
 
         """
         Displays query results for a window
@@ -82,8 +84,8 @@ class GenericContainerContext:
                 with dpg.table_row(parent=parent):
                     for index, value in enumerate(row):
                         if index == button_column_number:
-                            dpg.add_button(label=value, width=40, user_data=value, callback=button_callback)
-                            dpg.bind_item_theme(dpg.last_item(), theme)
+                            button = dpg.add_button(label=value, width=40, user_data=value, callback=button_callback)
+                            dpg.bind_item_theme(button, theme)
 
                         else:
                             dpg.add_text(value, wrap=300)
@@ -407,6 +409,7 @@ class SaapPortal(GenericContainerContext):
         highlight_blue = [96, 155, 197, 132]
         cust_id = user_data
 
+
         def change_color_button(color, button):
             with dpg.theme() as theme:
                 with dpg.theme_component(dpg.mvButton):
@@ -590,8 +593,13 @@ class SaapPortal(GenericContainerContext):
             
             try:
                 self.connection.cur_execute(self.tag, self.customer_query, database='db_capstone')
-                self._window_query_results(self.connection[self.tag][self.customer_query], parent=self.customer_table, button_column_number=0, button_callback=self.edit_mode)
+                self._window_query_results(self.connection[self.tag][self.customer_query], 
+                                            parent=self.customer_table, 
+                                            button_column_number=0, 
+                                            button_callback=self.edit_mode)
                 self.edit_customer_button_array = {}
+
+                
             except UnboundLocalError:
                 dpg.delete_item(self.customer_table, children_only=True)
 
