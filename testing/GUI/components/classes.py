@@ -32,6 +32,11 @@ class GenericContainerContext:
         return [item[0] for item in list]
 
 
+    def _connection_error(self, e):
+        with dpg.window(label='Error'):
+            dpg.add_text(f"Error, {e}")
+            dpg.add_button(label='close', callback= lambda: dpg.configure_item(dpg.last_container(), show=False))
+
     # dropdown filter
     def _create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
         """
@@ -50,7 +55,7 @@ class GenericContainerContext:
 
 
 
-    def _window_query_results(self, results: list, parent: str | int, button_column_number: Optional[int] = None):
+    def _window_query_results(self, results: list, parent: str | int, button_column_number: Optional[int] = None, button_callback: Optional[FunctionType] = None):
 
         """
         Displays query results for a window
@@ -77,8 +82,7 @@ class GenericContainerContext:
                 with dpg.table_row(parent=parent):
                     for index, value in enumerate(row):
                         if index == button_column_number:
-                            dpg.add_button(label=value, width=40, user_data=value, callback=self.edit_mode)
-                            #dpg.add_selectable(label=value, width=40, user_data=value, callback=self.edit_mode)
+                            dpg.add_button(label=value, width=40, user_data=value, callback=button_callback)
                             dpg.bind_item_theme(dpg.last_item(), theme)
 
                         else:
@@ -181,10 +185,10 @@ class QueryPortal(GenericContainerContext):
             try:
                 self.connection.cur_execute(self.tag, create_view, save=False)
             except DBError as e:
-                self.__connection_error(e)
+                self._connection_error(e)
         else:
             e = "You need to write a name first"
-            self.__connection_error(e)
+            self._connection_error(e)
 
 
     def setup(self, connection: ConnectionHandler):
@@ -209,11 +213,10 @@ class QueryPortal(GenericContainerContext):
                 pass
 
 
-    def __connection_error(self, e):
+    def _connection_error(self, e):
         with dpg.window(label='Error'):
             dpg.add_text(f"Error, {e}")
             dpg.add_button(label='close', callback= lambda: dpg.configure_item(dpg.last_container(), show=False))
-
 
 
     def __get_db_tables(self, sender, app_data):
@@ -227,7 +230,7 @@ class QueryPortal(GenericContainerContext):
             collection = self._collect_items(self.connection[self.tag]['SHOW TABLES;'])
             dpg.configure_item(self.sql_tables_listbox, items=collection)
         except DBError as e:
-            self.__connection_error(e)
+            self._connection_error(e)
 
     def __get_table_columns(self, sender, app_data):
         """
@@ -246,7 +249,7 @@ class QueryPortal(GenericContainerContext):
             data = self.connection.cur_execute(self.tag, query, save=False, headers=True)
             self._window_query_results(data, parent=self.query_results_table)
         except DBError as e:
-            self.__connection_error(e)
+            self._connection_error(e)
 
 
 
@@ -361,7 +364,6 @@ class SaapPortal(GenericContainerContext):
         # data for region
         self.zips_for_region = []
 
-
         
 
 
@@ -387,6 +389,8 @@ class SaapPortal(GenericContainerContext):
 
         self.create_transaction_piechart()
 
+    
+
     def _create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
         if parent_window == self.zip_filter_set:
             callback = self.zip_callback
@@ -397,12 +401,12 @@ class SaapPortal(GenericContainerContext):
 
     def edit_mode(self, sender, app_data, user_data):
 
-        parent = dpg.get_item_info(sender)['parent']
+        parent = dpg.get_item_info(sender)['parent']  # row holding items
         blue = [32, 160, 192]
         red = [255, 51, 85]
-        yellow = [0, 51, 77]
         highlight_blue = [96, 155, 197, 132]
-        
+        cust_id = user_data
+
         def change_color_button(color, button):
             with dpg.theme() as theme:
                 with dpg.theme_component(dpg.mvButton):
@@ -434,29 +438,27 @@ class SaapPortal(GenericContainerContext):
             # create input items with default values using local array
             # do for all except button, SSN, and datetime
             # assign array to self.dict with sender (customer ID button) as key
-            local_array = []            
+            cust_id_row_values = []            
             change_color_button(red, sender)
             for index, item in enumerate(range(sender + 2, sender + 14)):  # skip cust ID, SSN, 
-                local_array.append(dpg.get_value(item))
+                cust_id_row_values.append(dpg.get_value(item))
                 dpg.delete_item(item)  # have to delete item first, can not instantiate and configure tag ID
                 if item !=sender + 13:
-                    dpg.add_input_text(default_value=local_array[-1], parent=parent, tag=item, width=-1)
+                    dpg.add_input_text(default_value=cust_id_row_values[-1], parent=parent, tag=item, width=-1)
                 elif item == sender + 13:
                     dpg.add_text("(Will Update Automatically)", parent=parent, tag=item)
                 highlight_selection(item, highlight_blue)
                 
-                # highlight rows
-                # cust_id = self.connection[self.tag][self.customer_query][index][0]
 
-                # if cust_id == user_data:
-                #     print(dpg.get_item_theme(sender))
-                #     dpg.highlight_table_row(self.customer_table, row=index - 1, color=yellow)
+                cust_id_in_row = self.connection[self.tag][self.customer_query][index][0]
 
-
+                if cust_id == cust_id_in_row:
+                    hold_this_index = index
                     
+            self.edit_customer_button_array[sender] = cust_id_row_values
+            cust_id_row_values.append(hold_this_index)
 
 
-            self.edit_customer_button_array[sender] = local_array
 
         
         elif sender in self.edit_customer_button_array:
@@ -481,14 +483,68 @@ class SaapPortal(GenericContainerContext):
                 dpg.configure_item(confirmation, show=False)
 
             def commit_changes():
-                local_array = [dpg.get_value(item) for item in range(sender + 2, sender + 13)]
-                print(local_array)
+
+                modified_row_values = [dpg.get_value(item) for item in range(sender + 2, sender + 13)]
+                row_index = self.edit_customer_button_array[sender][-1]
+                
+                original_values = self.connection[self.tag][self.customer_query][row_index][2:-1]
+                headers = self.connection[self.tag][self.customer_query][0]
+                compiled = {}
+
+                
+                # group attached to popout window
                 with dpg.group(parent=confirmation, before=choices):
                     with dpg.group(horizontal=True):
-                        for item in local_array:
-                            dpg.add_text(color=red, default_value=item)
+                        with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                            resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                            borders_outerV=True, borders_innerH=True, borders_outerH=True) as show_changes:
+                                dpg.add_table_column(label="Header")
+                                dpg.add_table_column(label="Old")
+                                dpg.add_table_column(label="New")                           
+
+
+                        for index, header in enumerate(headers[2:-1]):
+                            if modified_row_values[index] != original_values[index]:
+                                compiled[header] = modified_row_values[index]
+
+
+
+                                with dpg.table_row(parent=show_changes):
+                                    dpg.add_text(header, color=blue)
+                                    dpg.add_text(default_value=f"{original_values[index]}")
+                                    dpg.add_text(default_value=f"{modified_row_values[index]}", color=red)
+                        
+                def commit_changes_confirmed():
+                    print(compiled)
+                    query_update = f"""
+                    UPDATE cdw_sapp_customer            
+                    SET
+                    """
+                    query_columns = ", ".join(f"{header} = '{compiled[header]}'" for header in compiled)
+                    last_updated = f", last_updated = NOW() "
+                    where = f"WHERE cust_id = {cust_id};"
+                    
+                    print(query_update + query_columns + last_updated + where)
+                    try:
+                        self.connection.cur_execute(self.tag, query_update + query_columns + last_updated + where, database='db_capstone')
+                        self.connection.cur_execute(self.tag, "COMMIT;")
+                        dpg.delete_item(confirmation, children_only=True)
+                        dpg.add_text('Changes Saved!', parent=confirmation)
+                        dpg.add_button(label='OK', callback=lambda: dpg.configure_item(confirmation, show=False), parent=confirmation)
+
+                    except DBError as e:
+                        print(e)
+                        with dpg.window(popup=True):
+                            self._connection_error(e)
+
+                    #dpg.configure_item(confirmation, show=False)
+                    self.refresh_search_like_input()
+                
+                
                 dpg.configure_item(confirm, default_value='Are you Sure?')
-                dpg.configure_item(yes, callback=lambda: print("okay"))
+                dpg.configure_item(yes, callback=commit_changes_confirmed)
+                self.edit_customer_button_array.pop(sender)
+
 
 
 
@@ -534,7 +590,7 @@ class SaapPortal(GenericContainerContext):
             
             try:
                 self.connection.cur_execute(self.tag, self.customer_query, database='db_capstone')
-                self._window_query_results(self.connection[self.tag][self.customer_query], parent=self.customer_table, button_column_number=0)
+                self._window_query_results(self.connection[self.tag][self.customer_query], parent=self.customer_table, button_column_number=0, button_callback=self.edit_mode)
                 self.edit_customer_button_array = {}
             except UnboundLocalError:
                 dpg.delete_item(self.customer_table, children_only=True)
