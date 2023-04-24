@@ -71,7 +71,7 @@ class ConnectionHandler(MariaDB.pooling.MySQLConnectionPool):
                 
         except KeyError:
             self.create_connection(connection_name=connection_name)
-            self.cur(connection_name)
+            self.cur(connection_name, dictionary=dictionary)
 
     def set_database(self, database: str, connection_name: str):
         try:
