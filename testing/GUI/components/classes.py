@@ -346,6 +346,7 @@ class SaapPortal(GenericContainerContext):
         self.reporting = "Edit Mode"
 
         self.edit_customer_button_array = {}
+        # sender:row_index
 
         #### DATASET CONTAINERS #### 
         self.total_sales = [] 
@@ -414,19 +415,27 @@ class SaapPortal(GenericContainerContext):
 
 
     def report_mode(self, sender, app_data, user_data):
-        parent = dpg.get_item_info(sender)['parent']
+        row = dpg.get_item_info(sender)['parent']
         cust_id = user_data
 
 
     def edit_mode(self, sender, app_data, user_data):
 
 
-        parent = dpg.get_item_info(sender)['parent']  # row holding items
+        row = dpg.get_item_info(sender)['parent']  # a given buttons row ID
+        rows_children = dpg.get_item_children(row)[1]  # all items in a given row
+        rows_in_table: list
+        rows_in_table = dpg.get_item_children(self.customer_table)[1]  # collection of all row IDs in the table
+        row_index_number = rows_in_table.index(row) # a given buttons row index number
+        row_original_snapshot = [str(item) for item in self.connection[self.tag][self.customer_query][1:][row_index_number]] # [1:] b/c zeroth is always header
+        
+        # NOTE:
+        # rows place in the table is the same as the index number in the original query
+
         blue = [32, 160, 192]
         red = [255, 51, 85]
         highlight_blue = [96, 155, 197, 132]
         cust_id = user_data
-        hold_this_index = None
         print(self.reporting)
         
         def change_color_button(color, button):
@@ -453,91 +462,43 @@ class SaapPortal(GenericContainerContext):
         # frame rounding 12
 
         if sender not in self.edit_customer_button_array:
-            # local array consists of all values per item
-            # steps:
-            # change button color
-            # delete all text items but keep their values in local array
-            # create input items with default values using local array
-            # do for all except button, SSN, and datetime
-            # assign array to self.dict with sender (customer ID button) as key
-            cust_id_row_values = []            
-            change_color_button(red, sender)
-            print(dpg.get_item_info(self.customer_table))
-            print(parent)
-
-            for index, item in enumerate(range(sender + 2, sender + 14)):  # skip cust ID, SSN, 
-                cust_id_row_values.append(dpg.get_value(item))
+            for index, item in enumerate(rows_children[2:]):  # [2:] b/c skip cust ID, SSN, 
                 dpg.delete_item(item)  # have to delete item first, can not instantiate and configure tag ID
-                if item !=sender + 13:
-                    dpg.add_input_text(default_value=cust_id_row_values[-1], parent=parent, tag=item, width=-1)
-                elif item == sender + 13:
-                    dpg.add_text("(Will Update Automatically)", parent=parent, tag=item)
+                if item !=rows_children[-1]:
+                    dpg.add_input_text(default_value=row_original_snapshot[2:][index], parent=row, tag=item, width=-1)
+                else:
+                    dpg.add_text('Updating...', color=blue, parent=row, tag=item)
                 highlight_selection(item, highlight_blue)
-                
-                # as the iterator runs through the row (horizontal), I'm taking advantage and having a search
-                # vertical, looking to see where the buttons place is relative to its surroundings
+            change_color_button(red, sender)
 
-                # with this technique, I don't need to search through an entire table, just within 0 to 13
-                # run through and search for the rows place in the table
-
-                # as you approach the limit of the table, you'll hit an error if your search table is longer than 13
-                # this will require a different algorithm, and here I'm searching through all the given rows
+            self.edit_customer_button_array[sender] = row_index_number
 
 
-                try:  
-                    cust_id_in_row = self.connection[self.tag][self.customer_query][index][0]
-                    if cust_id == cust_id_in_row:
-                        hold_this_index = index
-                except IndexError:
-                    pass
-                    
-            if hold_this_index is None:
-                print(sender)
-                for index, item in enumerate(dpg.get_item_info(self.customer_table)['children'][1]):
-                    print(item)
-                    if item == sender:
-                        hold_this_index = index
-        
-
-
-                    
-            self.edit_customer_button_array[sender] = cust_id_row_values
-            cust_id_row_values.append(hold_this_index)
-
-
-
-        
         elif sender in self.edit_customer_button_array:
-            # steps
-            # if sender is a key in self.dict
-            # delete all input items
-            # re-create text items from self.dict array values
-            # delete the array
-            # change button color 
+            print(sender, 'sender b4\n')
+            print(self.edit_customer_button_array[sender])
 
             # NOTE: 
             # calling a function within a function from a popout window
 
             def cancel_changes():
-                for index, item in enumerate(range(sender + 2, sender + 14)):
+                for index, item in enumerate(rows_children[2:]):
                     dpg.delete_item(item)
-                    dpg.add_text(default_value=self.edit_customer_button_array[sender][index], 
-                                    parent=parent, 
+                    dpg.add_text(default_value=row_original_snapshot[2:][index], 
+                                    parent=row, 
                                     tag=item)
-                self.edit_customer_button_array.pop(sender)
+                
+                self.edit_customer_button_array.pop(sender, 0)
+                
                 change_color_button(blue, sender)
                 dpg.configure_item(confirmation, show=False)
 
             def commit_changes():
 
-                modified_row_values = [dpg.get_value(item) for item in range(sender + 2, sender + 13)]
-                row_index = self.edit_customer_button_array[sender][-1]
-                
-                original_values = self.connection[self.tag][self.customer_query][row_index][2:-1]
+                modified_row_values = [dpg.get_value(item) for item in rows_children[2:]]
                 headers = self.connection[self.tag][self.customer_query][0]
                 compiled = {}
 
-                
                 # group attached to popout window
                 with dpg.group(parent=confirmation, before=choices):
                     with dpg.group(horizontal=True):
@@ -550,14 +511,13 @@ class SaapPortal(GenericContainerContext):
 
 
                         for index, header in enumerate(headers[2:-1]):
-                            if modified_row_values[index] != original_values[index]:
+                            if modified_row_values[index] != row_original_snapshot[2:][index]:
                                 compiled[header] = modified_row_values[index]
-
 
 
                                 with dpg.table_row(parent=show_changes):
                                     dpg.add_text(header, color=blue)
-                                    dpg.add_text(default_value=f"{original_values[index]}")
+                                    dpg.add_text(default_value=f"{row_original_snapshot[2:][index]}")
                                     dpg.add_text(default_value=f"{modified_row_values[index]}", color=red)
                         
                 def commit_changes_confirmed():
@@ -585,11 +545,12 @@ class SaapPortal(GenericContainerContext):
 
                     #dpg.configure_item(confirmation, show=False)
                     self.refresh_search_like_input()
+                    
+                    self.edit_customer_button_array.pop(self, 0)
                 
                 
                 dpg.configure_item(confirm, default_value='Are you Sure?')
                 dpg.configure_item(yes, callback=commit_changes_confirmed)
-                self.edit_customer_button_array.pop(sender)
 
 
 
