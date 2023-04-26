@@ -5,6 +5,8 @@ from typing import Optional, Union
 from connection_class import ConnectionHandler
 from mysql.connector import Error as DBError
 from contextlib import contextmanager
+from sorting_functions import capture_min_max
+
 
 class GenericContainerContext:
     def __init__(self, container_tag: str, *args, **kwargs):
@@ -436,8 +438,7 @@ class SaapPortal(GenericContainerContext):
         self.__setup(connection=connection)
         setup_dict = {
             self.zip_filter_set:'SELECT DISTINCT(cust_zip) FROM cdw_sapp_customer;',
-            self.state_filter_set:'SELECT DISTINCT(branch_state) FROM cdw_sapp_branch ORDER BY 1;',
-            self.tansaction_filter_sets:'SELECT DISTINCT(transaction_type) FROM cdw_sapp_credit_card;'
+            self.state_filter_set:'SELECT DISTINCT(branch_state) FROM cdw_sapp_branch ORDER BY 1;'
         }
 
 
@@ -1236,9 +1237,114 @@ class SaapPortal(GenericContainerContext):
                                         with dpg.tab(label='Company-Wide Breakdown'):
                                             dpg.add_text('Display the number and total values of transactions for a given type.')
                                             dpg.add_separator()
-                                            with dpg.group():
+
+
+
+                                            
+                                            with dpg.group():  # first group (scatter plot)
+                                                with dpg.plot(height=517, width=1500) as scatter_plot:
+                                                    x_axis_scatter = dpg.add_plot_axis(dpg.mvXAxis, label='Time')
+                                                    y_axis_scatter = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction')
+                                                    
+                                                    
+                                                    dpg.add_stem_series(parent=y_axis_scatter, x=[], y=[])
+                                                    
+                                                    candle = dpg.add_candle_series(parent=y_axis_scatter,
+                                                                            dates=[],
+                                                                            opens=[],
+                                                                            closes=[],
+                                                                            lows=[],
+                                                                            highs=[],
+                                                                            time_unit=dpg.mvTimeUnit_Mo)
+
+                                                def grab_scatter_info():
+                                                    query = f"""
+                                                                SELECT
+                                                                -- month, total, day, trans/month, month/day
+                                                                    *, 
+                                                                    TRUNCATE(`Month` + (`Day`/100), 2) AS `Month / Day`
+                                                                FROM (
+                                                                SELECT
+                                                                    ROUND(SUM(transaction_value), 2) AS `Total`, 
+                                                                    MONTH(timeid) AS `Month`,
+                                                                    DAY(timeid) AS `Day`
+                                                                FROM saap_customer_report
+                                                                WHERE timeid BETWEEN '2018-01-01' AND '2018-12-30'
+                                                                GROUP BY `Month`, `Day` ) m
+
+                                                                JOIN (
+                                                                SELECT 
+                                                                    ROUND(SUM(transaction_value), 2) `Monthly Transaction Value`,
+                                                                    MONTH(timeid) AS `Month`
+                                                                FROM saap_customer_report
+                                                                WHERE timeid BETWEEN '2018-01-01' AND '2018-12-30'
+                                                                GROUP BY `Month`
+                                                                ) t 
+                                                                USING (`Month`)
+                                                    """
+                                                    self.connection.cur_execute(self.tag, query, database='db_capstone')
+                                                    # grab value
+
+                                                    money = [value[1] for value in self.connection[self.tag][query][1:]]
+                                                    type = [value[1] for value in self.connection[self.tag][query][1:]]
+                                                    time = [value[4] for value in self.connection[self.tag][query][1:]]
+                                                    ticks = [[f"{str(tick).replace('.', '/')}", tick] for tick in time]
+                                                    print(ticks)
+
+                                                    midpoint_date = [(114 + num)/100 for num in range(0, 1200, 100)]
+                                                    opens = [money[index] for index in range(0, (28 * 12) , 28)]  # 0 b/c list starts at zero, don't forget
+                                                    closes = [money[index] for index in range(27, (28 * 12) , 28)]  # 27 b/c starting from zeroth index
+                                                    low, high = capture_min_max(money, 28, 12)
+                                                    print(opens)
+                                                    print(closes)
+                                                
+                                                    self.configure_plot(scatter_plot, 1, x=time, y1=money, x_ticks=ticks)
+                                                    dpg.configure_item(candle, dates=midpoint_date, opens=opens, closes=closes, lows=low, highs=high)
+                                                    dpg.fit_axis_data(x_axis_scatter)
+
+
+
+
+                                                    
+
+                                                    
+
+                                                
                                                 with dpg.group():
-                                                    pass
+                                                        dpg.add_text('View Transaction History')
+                                                        dpg.add_button(label='test', callback=grab_scatter_info)
+                                                        dpg.add_button(label='get info', callback=lambda: print(dpg.get_item_state(scatter_plot)))
+
+                                                    
+
+                                            
+                                            with dpg.group(horizontal=True):  # second group (buttons)
+                                                
+                                                with dpg.group(horizontal=True):
+                                                    
+                                                    dpg.add_text('Between')
+                                                    
+                                                    self.__start_date = dpg.add_button(label='start', width=100)
+                                                    with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
+                                                        dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u:dpg.configure_item(self.__start_date, label=a))
+                                                    
+                                                    dpg.add_text('and')
+                                                    
+                                                    self.__stop_date = dpg.add_button(label='stop', width=100)
+                                                    with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
+                                                        
+                                                        dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u: dpg.configure_item(self.__stop_date, label=a))
+                                                
+                                                def clear_dates():
+                                                    for _ in range(2):
+                                                        dpg.configure_item(self.__start_date, label='start')
+                                                        dpg.configure_item(self.__stop_date, label='end')
+                                                
+                                                with dpg.group():    
+                                                    dpg.add_button(label='Search', width=160)
+                                                    dpg.add_button(label='Clear', width=160, callback=clear_dates)
+                                            
+                                            
                                             with dpg.group(horizontal=True):
                                                 pass
                                             with dpg.group(horizontal=True):
@@ -1599,34 +1705,8 @@ class SaapPortal(GenericContainerContext):
 
 
 
-                                        with dpg.tab(label='Generate Customer Bill'):
 
-                                            with dpg.child_window(width=-1, height=225):
-                                                dpg.add_text('View Transaction History')
-                                            with dpg.group(horizontal=True):
-                                                with dpg.group(horizontal=True):
-                                                    
-                                                    dpg.add_text('Between')
-                                                    
-                                                    self.__start_date = dpg.add_button(label='start', width=100)
-                                                    with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
-                                                        dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u:dpg.configure_item(self.__start_date, label=a))
-                                                    
-                                                    dpg.add_text('and')
-                                                    
-                                                    self.__stop_date = dpg.add_button(label='stop', width=100)
-                                                    with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
-                                                        
-                                                        dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u: dpg.configure_item(self.__stop_date, label=a))
-                                                
-                                                def clear_dates():
-                                                    for _ in range(2):
-                                                        dpg.configure_item(self.__start_date, label='start')
-                                                        dpg.configure_item(self.__stop_date, label='end')
-                                                
-                                                with dpg.group():    
-                                                    dpg.add_button(label='Search', width=160)
-                                                    dpg.add_button(label='Clear', width=160, callback=clear_dates)
+                                            
                 
                                                 
 
