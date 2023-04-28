@@ -1,8 +1,8 @@
 import dearpygui.dearpygui as dpg
+from Components import *
 from dearpygui.demo import show_demo
-from connection_class import ConnectionHandler
-from mysql.connector import Error as DBError
-from classes import Login, QueryPortal, SaapPortal
+#from ConnectionHandler.connection_class import ConnectionHandler
+
 
 # TODO:
 # create date and buttons dropdown or find a way to fix date module
@@ -25,6 +25,7 @@ connection = None
 login_window = Login('login window')
 query_window = QueryPortal('query window')
 saap_window = SaapPortal('Saap Portal')
+customer_window = CustomerPortal('Customer Portal')
 
 def viewport_buttons(enabled: bool):
     pass
@@ -46,7 +47,9 @@ def event_handler():
 
         query_window.setup(connection)
         saap_window.setup(connection)
+        customer_window.setup(connection)
         
+
         dpg.configure_item(viewport_query_button, enabled=True)
 
     except DBError as e:
@@ -73,9 +76,10 @@ with dpg.viewport_menu_bar():
     
     # package this
     viewport_query_button = dpg.add_button(label='Query Portal', callback=query_window.toggle)
-    vieport_saap_button = dpg.add_button(label='Business Dashboard', callback=saap_window.toggle)
+    #vieport_saap_button = dpg.add_button(label='Business Dashboard', callback=saap_window.toggle)
     query_window.window()
     saap_window.window()
+    customer_window.window()
 
 
 dpg.show_viewport()
