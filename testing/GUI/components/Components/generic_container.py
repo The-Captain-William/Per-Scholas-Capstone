@@ -20,6 +20,25 @@ class GenericContainerContext:
         self.connection.create_connection(self.tag)
         self.connection.cur(self.tag)
 
+    def _mouse_move_callback(self, sender, data):
+        """
+        Create an item handler registry
+        attach the item handler underneath with this function
+
+        Then use a bind item handler registry to bind the item 
+        you want to be affected by the registry to the registry.
+        
+        Example:\n
+        `with dpg.child_window() as customer_table_group:`
+            `with dpg.item_handler_registry() as mouse_hover:`
+                `dpg.add_item_hover_handler(callback=self.mouse_move_callback)`
+
+            `dpg.bind_item_handler_registry(customer_table_group, mouse_hover)`        
+        """
+        if dpg.get_mouse_pos() != self.mouse_pos:
+            self.mouse_pos = dpg.get_mouse_pos(local=False)
+            print(self.mouse_pos)
+
     @staticmethod
     def _collect_items(list: list):
         """

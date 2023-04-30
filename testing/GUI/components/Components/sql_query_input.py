@@ -7,13 +7,13 @@ class QueryPortal(GenericContainerContext):
         super().__init__(container_tag, *args, **kwargs)
 
 
-    def __save_file(self, sender, app_data, user_data, contents):  # app_data, user_data is data of sql box 
+    def __save_file(self, sender, app_data, user_data):  # app_data, user_data is data of sql box 
         from time import sleep
 
 
         if user_data == self.__export_sql_file_button:
             with open(file=app_data['file_path_name'], mode='w') as sql_file:
-                sql_file.write(dpg.get_value(user_data))
+                sql_file.write(dpg.get_value(self.sql_query_box))
             
 
         elif user_data == self.__export_csv_file_button:
@@ -21,7 +21,7 @@ class QueryPortal(GenericContainerContext):
             with open(file=app_data['file_path_name'], mode='w', newline='') as query_to_csv:
                 #print(app_data, app_data['file_path_name'])
                 csv_file = csv.writer(query_to_csv)
-                csv_file.writerows(contents)  # contents is a list of tuples
+                csv_file.writerows(self.current)  # contents is a list of tuples
                 # writing row for row in in [contents]
 
 
@@ -37,15 +37,25 @@ class QueryPortal(GenericContainerContext):
         self.query = dpg.get_value('sql-box')
         self.connection.cur(self.tag)
         self.connection.cur_execute(self.tag, self.query)
-        #print(self.connection[self.tag][self.query])
+        print(self.connection[self.tag][self.query])
 
     def __create_view(self):
+        def close_and_refresh():
+            dpg.configure_item(popup, show=False)
+            self.refresh()
+
         current_query = dpg.get_value(self.sql_query_box)
         name = dpg.get_value(self.__sql_view_name)
         if any(name):
             create_view = f"CREATE VIEW {name} AS\n" + current_query
             try:
                 self.connection.cur_execute(self.tag, create_view, save=False)
+                dpg.configure_item(self.__sql_push_view, show=False)
+                with dpg.window(popup=True, pos=dpg.get_mouse_pos(local=False)) as popup:
+                    dpg.add_text('SQL View Saved!')
+                    dpg.add_button(label='OK', callback=close_and_refresh)
+
+
             except DBError as e:
                 self._connection_error(e)
         else:
@@ -108,8 +118,8 @@ class QueryPortal(GenericContainerContext):
             query = dpg.get_value(self.sql_query_box)
         
         try:
-            data = self.connection.cur_execute(self.tag, query, save=False, headers=True)
-            self._window_query_results(data, parent=self.query_results_table)
+            self.current = self.connection.cur_execute(self.tag, query, save=False, headers=True)
+            self._window_query_results(self.current, parent=self.query_results_table)
         except DBError as e:
             self._connection_error(e)
 
@@ -138,6 +148,10 @@ class QueryPortal(GenericContainerContext):
                     with dpg.tab_bar():
                         with dpg.tab(label='SQL Queries'):
                             self.sql_query_box = dpg.add_input_text(multiline=True, height=350, width=-1, default_value='SQL Queries go here', tab_input=True) 
+                        def debug_dpg(item):
+                            print(dpg.get_item_info(item))
+                            print(dpg.get_value(item))
+                        
 
 
 
@@ -149,6 +163,8 @@ class QueryPortal(GenericContainerContext):
                 with dpg.child_window(height=45, autosize_x=True):
                     with dpg.group(horizontal=True):
                         self.__run_query_button = dpg.add_button(label='Run Query', callback=self.__run_query, tag='sql-button')
+                        dpg.add_button(label='test', callback=lambda: debug_dpg(self.sql_query_box))
+
                         dpg.add_button(label='Export..')
                         with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
                             with dpg.group(horizontal=True):
@@ -160,10 +176,10 @@ class QueryPortal(GenericContainerContext):
                                     dpg.add_text('Export Data:')
                                     dpg.add_separator()                                                                
                                     self.__export_csv_file_button = dpg.add_button(label='Export Data as CSV', callback=lambda: dpg.configure_item(self.__sql_save, show=True, label='Save Data as .csv', user_data=self.__export_csv_file_button))
-                                    self.__export_sql_view_button = dpg.add_button(label='Write Data to Server as View', callback=lambda: dpg.configure_item(self.__sql_push_view, show=True))
+                                    self.__export_sql_view_button = dpg.add_button(label='Write Data to Server as View', callback=lambda: dpg.configure_item(self.__sql_push_view, show=True, pos=dpg.get_mouse_pos(local=False)))
 
             # hidden file browser
-            with dpg.file_dialog(label="File Directory", width=300, height=400, show=False, user_data=None,callback=lambda a, s, u, contents: self.__save_file(a, s, u, self.contents)) as self.__sql_save: # NOTE using lambda as a closure, to get data w.r.t self and then moving to a static function
+            with dpg.file_dialog(label="File Directory", width=300, height=400, show=False, user_data=None,callback=self.__save_file) as self.__sql_save: # NOTE using lambda as a closure, to get data w.r.t self and then moving to a static function
                 dpg.add_file_extension(".sql", color=(179, 217, 255))
                 dpg.add_file_extension(".csv", color=(255, 255, 179))
 

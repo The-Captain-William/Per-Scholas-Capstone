@@ -31,7 +31,6 @@ def viewport_buttons(enabled: bool):
     pass
 
 
-
 def event_handler():
     try:
         login_window.grab_credentials()
@@ -76,7 +75,8 @@ with dpg.viewport_menu_bar():
     
     # package this
     viewport_query_button = dpg.add_button(label='Query Portal', callback=query_window.toggle)
-    #vieport_saap_button = dpg.add_button(label='Business Dashboard', callback=saap_window.toggle)
+    vieport_saap_button = dpg.add_button(label='Business Analytics Dashboard', callback=saap_window.toggle)
+    viewport_customer_button = dpg.add_button(label='Customers Database', callback=customer_window.toggle)
     query_window.window()
     saap_window.window()
     customer_window.window()

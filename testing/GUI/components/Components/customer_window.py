@@ -8,22 +8,13 @@ class CustomerPortal(GenericContainerContext):
     def __init__(self, container_tag: str, *args, **kwargs):
         super().__init__(container_tag, *args, **kwargs)
         self.reporting = "Edit Mode"
+        self.mouse_pos = [0, 0]
 
     def setup(self, connection: ConnectionHandler):
         return super().setup(connection)
-
-    def edit_or_report_mode(self, sender, app_data, user_data):
-        self.reporting = app_data
-        if self.reporting == "Report Mode":
-            query = """
-            SELECT ROUND(AVG(avg_sum), 2) AS `Average Customer Lifetime Value` 
-            FROM
-                (
-                    SELECT SUM(transaction_value) AS avg_sum
-                    FROM saap_customer_report
-                    group by cust_id
-                ) t;
-            """
+    
+    def _mouse_move_callback(self, sender, data):
+        return super()._mouse_move_callback(sender, data)
 
 
     def customer_button(self, sender, app_data, user_data):
@@ -37,23 +28,11 @@ class CustomerPortal(GenericContainerContext):
 
     def edit_or_report_mode(self, sender, app_data, user_data):
         self.reporting = app_data
-        if self.reporting == "Report Mode":
-            query = """
-            SELECT ROUND(AVG(avg_sum), 2) AS `Average Customer Lifetime Value` 
-            FROM
-                (
-                    SELECT SUM(transaction_value) AS avg_sum
-                    FROM saap_customer_report
-                    group by cust_id
-                ) t;
-            """
 
 
     def report_mode(self, sender, app_data, user_data):
         # sender = ID, 
         # user_data = cust_id 
-
-        row = dpg.get_item_info(sender)['parent']
         query =f"""
             SELECT
 	            DISTINCT(CONCAT(first_name, ' ', middle_name, ' ', last_name)) AS `Name`,
@@ -250,7 +229,8 @@ class CustomerPortal(GenericContainerContext):
 
 
 
-            with dpg.window(popup=True, pos=dpg.get_mouse_pos()) as confirmation:  # dpg.window(popout=True) is snappier than dpg.popout
+            with dpg.window(popup=True, pos=dpg.get_mouse_pos(local=False)) as confirmation:  # dpg.window(popout=True) is snappier than dpg.popout
+                
                 confirm = dpg.add_text('Commit Changes?')
                 with dpg.group(horizontal=True) as choices:
                     yes = dpg.add_button(label='Yes', callback=commit_changes)
@@ -267,8 +247,10 @@ class CustomerPortal(GenericContainerContext):
     def search_like_input(self):
         contents_firstname = dpg.get_value(self.first_name)
         contents_lastname = dpg.get_value(self.last_name)
+        # values of empties are empty strings and not None
+        # python does not consider empties to be equal to None
 
-        if contents_lastname !=None or contents_lastname != None:
+        if contents_firstname !='' or contents_lastname != '':
 
             if (len(contents_firstname) and len(contents_lastname) !=0) and \
                 (contents_firstname !=None and contents_lastname !=None):
@@ -297,20 +279,20 @@ class CustomerPortal(GenericContainerContext):
                                             button_column_number=0, 
                                             button_callback=self.customer_button)
                 self.edit_customer_button_array = {}
-
-
-
-                
             except UnboundLocalError:
                 dpg.delete_item(self.customer_table, children_only=True)
+
+        elif contents_firstname == '' and contents_lastname == '':
+            dpg.delete_item(self.customer_table, children_only=True)
 
 
 
 
 
     def window(self):
+        
+        with dpg.window(label='Customer Menu', width=1506, height=875, tag=self.tag):
 
-        with dpg.window(label='Customer Menu'):
             with dpg.tab_bar():
 
                 # Customer details 1 & 2, find and select customer 
@@ -357,8 +339,8 @@ class CustomerPortal(GenericContainerContext):
                                 pass
                         
                         # leftmost side
-                        with dpg.child_window(width=795, height=450):
-                            with dpg.plot(label='Customer 2018 Transaction History') as self.single_customer_transaction_volume_plot:
+                        with dpg.child_window(width=750, height=450):
+                            with dpg.plot(label='Customer 2018 Transaction History', width=735) as self.single_customer_transaction_volume_plot:
                                 x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
                                 y_axis = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Amount per Month (USD)')
                             
@@ -378,10 +360,11 @@ class CustomerPortal(GenericContainerContext):
 
                     with dpg.group(horizontal=True):
                         dpg.add_text('Results')
-                        dpg.add_radio_button(("Edit Mode", "Report Mode"), callback=self.edit_or_report_mode, horizontal=True)
+                        dpg.add_radio_button(("Edit Mode", "Report Mode"), callback=self.edit_or_report_mode, horizontal=True)                        
 
-                    with dpg.child_window():
-                        with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
-                                    resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
-                                    borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.customer_table:
-                                    pass  
+                    with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.customer_table:
+                                pass  
+                        
+                        
