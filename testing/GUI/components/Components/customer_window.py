@@ -72,9 +72,9 @@ class CustomerPortal(GenericContainerContext):
 
         report = self.connection.cur_execute(self.dictionary_cursor, query, save=False, database='db_capstone', headers=False)[0]
         last_branch = self.connection.cur_execute(self.dictionary_cursor, query_last_branch, save=False, database='db_capstone', headers=False)[0]
-        print(report)
-        print(last_branch)
-        print(self.connection[self.dictionary_cursor])
+        # print(report)
+        # print(last_branch)
+        # print(self.connection[self.dictionary_cursor])
         
         for key, value in report.items():
             dpg.add_text(parent=self.report_group, default_value=f"{key}: {str(value)}")
@@ -199,7 +199,7 @@ class CustomerPortal(GenericContainerContext):
                                     dpg.add_text(default_value=f"{modified_row_values[index]}", color=red)
                         
                 def commit_changes_confirmed():
-                    print(compiled)
+                    #print(compiled)
                     query_update = f"""
                     UPDATE cdw_sapp_customer            
                     SET
@@ -208,7 +208,7 @@ class CustomerPortal(GenericContainerContext):
                     last_updated = f", last_updated = NOW() "
                     where = f"WHERE cust_id = {cust_id};"
                     
-                    print(query_update + query_columns + last_updated + where)
+                    #print(query_update + query_columns + last_updated + where)
                     try:
                         self.connection.cur_execute(self.tag, query_update + query_columns + last_updated + where, database='db_capstone')
                         self.connection.cur_execute(self.tag, "COMMIT;")
@@ -217,7 +217,7 @@ class CustomerPortal(GenericContainerContext):
                         dpg.add_button(label='OK', callback=lambda: dpg.configure_item(confirmation, show=False), parent=confirmation)
 
                     except DBError as e:
-                        print(e)
+                       # print(e)
                         with dpg.window(popup=True):
                             self._connection_error(e)
 

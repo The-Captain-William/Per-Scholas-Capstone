@@ -62,13 +62,78 @@ def event_handler():
 
 
 
-
 dpg.create_context()
 dpg.setup_dearpygui()
 
 dpg.create_viewport(title='Data Explorer', width=2000, height=1200)
 
-show_demo()
+dpg.show_style_editor()
+dpg.show_item_registry()
+
+with dpg.theme() as global_theme:
+    with dpg.theme_component(dpg.mvAll):
+        # window bg
+        dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 25), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (32, 32, 32), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_PopupBg, (37, 37, 38), category=dpg.mvThemeCat_Core)
+        
+        # scrollbar
+        dpg.add_theme_color(dpg.mvThemeCol_ScrollbarGrab, (214, 214, 214), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_ScrollbarGrabHovered, (240, 240, 241), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_ScrollbarGrabActive, (255, 255, 255), category=dpg.mvThemeCat_Core)
+        
+        # window bg
+        dpg.add_theme_color(dpg.mvThemeCol_TitleBg, (15, 15, 15), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TitleBgActive, (41, 41, 41), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TitleBgActive, (37, 37, 38), category=dpg.mvThemeCat_Core)
+
+        # tabs
+        dpg.add_theme_color(dpg.mvThemeCol_Tab, (51, 51, 55), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TabHovered, (221, 221, 221, 103), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TabActive, (88, 144, 165, 153), category=dpg.mvThemeCat_Core)
+
+        # buttons
+        dpg.add_theme_color(dpg.mvThemeCol_Button, (69, 73, 83), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (207, 207, 207, 103), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (230, 230, 230, 153), category=dpg.mvThemeCat_Core)
+
+        # table
+#        dpg.add_theme_color(dpg.mvThemeCol_TableHeaderBg, (164, 192, 207, 11), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TableBorderStrong, (164, 192, 207, 0), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TableBorderLight, (164, 192, 207, 0), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TableRowBg, (193, 195, 203, 61), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_TableRowBgAlt, (45, 43, 43, 255), category=dpg.mvThemeCat_Core)
+
+
+        # checkmark, radio
+        dpg.add_theme_color(dpg.mvThemeCol_CheckMark, (46, 225, 175, 232), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_FrameBgHovered, (191, 196, 199, 103), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_FrameBgActive, (255, 255, 255, 153), category=dpg.mvThemeCat_Core)
+
+
+        # plot global
+        dpg.add_theme_color(dpg.mvThemeCol_Border, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
+        dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
+        dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
+        dpg.add_theme_color(dpg.mvPlotCol_Line, (38, 255, 144, 255), category=dpg.mvThemeCat_Plots)
+
+        # window styles
+        dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, 6, category=dpg.mvThemeCat_Core)
+        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 6, category=dpg.mvThemeCat_Core)
+        dpg.add_theme_style(dpg.mvStyleVar_PopupRounding, 3, category=dpg.mvThemeCat_Core)
+
+    with dpg.theme_component(dpg.mvListbox):
+        dpg.add_theme_color(dpg.mvThemeCol_FrameBgActive, (46, 225, 175, 232), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_Header, value=(0, 0, 0, 255), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_HeaderHovered, value=(104, 255, 199, 232), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_HeaderActive, value=(193, 255, 232, 232), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_Text, value=(0, 0, 0, 255))
+
+
+dpg.bind_theme(global_theme)
+
+
+
 
 with dpg.viewport_menu_bar():
     login_window.window(default_login=db_user, default_pass=db_password, external_callback=event_handler)
@@ -81,11 +146,11 @@ with dpg.viewport_menu_bar():
     saap_window.window()
     customer_window.window()
 
+#show_demo()
 
 dpg.show_viewport()
 dpg.start_dearpygui()
 dpg.destroy_context()
-
 
 
 def close(connection: ConnectionHandler):

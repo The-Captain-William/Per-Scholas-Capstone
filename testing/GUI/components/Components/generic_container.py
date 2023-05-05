@@ -80,6 +80,8 @@ class GenericContainerContext:
         """
         Displays query results for a window, 
         Optional Button parameter
+        Button colors are: Button, ButtonHovered, ButtonActive
+        RGB-A (Alpha)
         """
         self.contents = results
         dpg.delete_item(parent, children_only=True)
@@ -90,10 +92,11 @@ class GenericContainerContext:
             dpg.add_table_column(label=column_name, parent=parent, width_stretch=False)
         
         if button_column_number != None:
+
             with dpg.theme() as theme:
                 with dpg.theme_component(dpg.mvButton):
                     dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 15)
-                    dpg.add_theme_color(dpg.mvThemeCol_Button, [32, 160, 192])
+                    dpg.add_theme_color(dpg.mvThemeCol_Text, (0, 0, 0, 255))
                     
 
 
