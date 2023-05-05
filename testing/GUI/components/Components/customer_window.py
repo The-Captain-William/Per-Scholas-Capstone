@@ -30,6 +30,7 @@ class CustomerPortal(GenericContainerContext):
         self.reporting = app_data
 
 
+
     def report_mode(self, sender, app_data, user_data):
         # sender = ID, 
         # user_data = cust_id 
@@ -113,6 +114,7 @@ class CustomerPortal(GenericContainerContext):
         # rows place in the table is the same as the index number in the original query
 
         blue = [32, 160, 192]
+        mint_green = [46, 255, 175, 232]
         red = [255, 51, 85]
         highlight_blue = [96, 155, 197, 132]
         cust_id = user_data
@@ -166,7 +168,7 @@ class CustomerPortal(GenericContainerContext):
                 
                 self.edit_customer_button_array.pop(sender, 0)
                 
-                change_color_button(blue, sender)
+                change_color_button(mint_green, sender)
                 dpg.configure_item(confirmation, show=False)
 
             def commit_changes():
@@ -247,10 +249,12 @@ class CustomerPortal(GenericContainerContext):
     def search_like_input(self):
         contents_firstname = dpg.get_value(self.first_name)
         contents_lastname = dpg.get_value(self.last_name)
+        cust_id = dpg.get_value(self.cust_id)
         # values of empties are empty strings and not None
         # python does not consider empties to be equal to None
 
-        if contents_firstname !='' or contents_lastname != '':
+        if (contents_firstname !='' or contents_lastname != ''):
+            dpg.set_value(self.cust_id, '')
 
             if (len(contents_firstname) and len(contents_lastname) !=0) and \
                 (contents_firstname !=None and contents_lastname !=None):
@@ -271,19 +275,39 @@ class CustomerPortal(GenericContainerContext):
                 WHERE last_name LIKE ('{contents_lastname}%')
                 LIMIT 100;
                 """
-            
-            try:
-                self.connection.cur_execute(self.tag, self.customer_query, database='db_capstone')
-                self._window_query_results(self.connection[self.tag][self.customer_query], 
-                                            parent=self.customer_table, 
-                                            button_column_number=0, 
-                                            button_callback=self.customer_button)
-                self.edit_customer_button_array = {}
-            except UnboundLocalError:
-                dpg.delete_item(self.customer_table, children_only=True)
 
-        elif contents_firstname == '' and contents_lastname == '':
+            
+        if cust_id != '':
+            dpg.set_value(self.first_name, '')
+            dpg.set_value(self.last_name, '')
             dpg.delete_item(self.customer_table, children_only=True)
+            
+            self.customer_query = f"""
+            SELECT * FROM cdw_sapp_customer
+            WHERE cust_id = {cust_id}
+            LIMIT 100;
+            """
+
+        try:
+            self.connection.cur_execute(self.tag, self.customer_query, database='db_capstone')
+            self._window_query_results(self.connection[self.tag][self.customer_query], 
+                                        parent=self.customer_table, 
+                                        button_column_number=0, 
+                                        button_callback=self.customer_button
+            )
+            
+            self.edit_customer_button_array = {}
+        except UnboundLocalError:
+            dpg.delete_item(self.customer_table, children_only=True)
+        except DBError:
+            dpg.delete_item(self.customer_table, children_only=True)
+
+
+        if contents_firstname == '' and contents_lastname == '' and cust_id == '':
+            dpg.delete_item(self.customer_table, children_only=True)
+
+        
+
 
 
 
@@ -291,7 +315,7 @@ class CustomerPortal(GenericContainerContext):
 
     def window(self):
         
-        with dpg.window(label='Customer Menu', width=1506, height=875, tag=self.tag):
+        with dpg.window(label='Customer Menu', width=1506, height=975, tag=self.tag):
 
             with dpg.tab_bar():
 
@@ -301,70 +325,92 @@ class CustomerPortal(GenericContainerContext):
                     with dpg.group(horizontal=True):
 
                         # right side
-                        with dpg.child_window(width=330, height=450):
-                            dpg.add_text('Search for customer with first & last name, or jump to customer id.', wrap=286)
-                            dpg.add_spacer()
-                            with dpg.group(horizontal=True):
-                                with dpg.group():
-                                    dpg.add_text('First name')
-                                    self.first_name = dpg.add_input_text(tag='first-name', width=90)
-                                with dpg.group():
-                                    dpg.add_text('Last name')
-                                    self.last_name = dpg.add_input_text(tag='last-name', width=90)
-                                with dpg.group():
-                                    dpg.add_text('cust_id')
-                                    dpg.add_input_text(tag='Cust-id', width=90)
-                            dpg.add_spacer()
-                            def clear():
-                                dpg.set_value(self.first_name, '')
-                                dpg.set_value(self.last_name, '')
-                                dpg.delete_item(self.customer_table, children_only=True)
+                        with dpg.group(horizontal=True):
+                            with dpg.child_window(width=330, height=450):
+                                dpg.add_text('Search for customer with first & last name, or jump to customer id.', wrap=286)
+                                dpg.add_spacer()
+                                with dpg.group(horizontal=True):
+                                    with dpg.group():
+                                        dpg.add_text('First name')
+                                        self.first_name = dpg.add_input_text(tag='first-name', width=90)
+                                    with dpg.group():
+                                        dpg.add_text('Last name')
+                                        self.last_name = dpg.add_input_text(tag='last-name', width=90)
+                                    with dpg.group():
+                                        dpg.add_text('cust_id')
+                                        self.cust_id = dpg.add_input_text(tag='Cust-id', width=90)
+                                dpg.add_spacer()
+                                def clear():
+                                    dpg.set_value(self.first_name, '')
+                                    dpg.set_value(self.last_name, '')
+                                    dpg.delete_item(self.customer_table, children_only=True)
 
-                            dpg.add_button(label='Clear', width=286, callback=clear)
-
-
-                        with dpg.item_handler_registry() as search_names:
-                            #dpg.add_item_edited_handler(callback=lambda s, a, u: print(s, a, u, dpg.get_value(a)))
-                            dpg.add_item_edited_handler(callback=self.search_like_input)
-
-                        dpg.bind_item_handler_registry(self.first_name, search_names)
-                        dpg.bind_item_handler_registry(self.last_name, search_names)
+                                dpg.add_button(label='Clear', width=286, callback=clear)
 
 
-                        # middle side                                                    
-                        with dpg.child_window(width=330, height=450):
-                            dpg.add_text('Customer Report:')
-                            dpg.add_separator()
-                            with dpg.group() as self.report_group:
-                                pass
-                        
-                        # leftmost side
-                        with dpg.child_window(width=750, height=450):
-                            with dpg.plot(label='Customer 2018 Transaction History', width=735) as self.single_customer_transaction_volume_plot:
-                                x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
-                                y_axis = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Amount per Month (USD)')
+                            with dpg.item_handler_registry() as search_names:
+                                dpg.add_item_edited_handler(callback=self.search_like_input)
+
+                            dpg.bind_item_handler_registry(self.first_name, search_names)
+                            dpg.bind_item_handler_registry(self.last_name, search_names)
+                            dpg.bind_item_handler_registry(self.cust_id, search_names)
+
+
+
+
+                            # middle side                                                    
+                            with dpg.child_window(width=330, height=450):
+                                dpg.add_text('Customer Report:')
+                                dpg.add_separator()
+                                with dpg.group() as self.report_group:
+                                    pass
                             
-                                dpg.set_axis_limits(x_axis, 1, 12)
-                                dpg.set_axis_limits(y_axis, 0, 2000)
-                                dpg.set_axis_ticks(x_axis, [[str(num), num] for num in range(1, 13)])
-                                dpg.add_line_series(parent=dpg.last_item(), x=[], y=[])
-                            
-                            # print(self.single_customer_transaction_volume_plot)
-                            # print(x_axis, y_axis, series)
-                            # print(dpg.get_item_children(self.single_customer_transaction_volume_plot))
-                            # print(dpg.get_item_info(series)['parent'])
-                            # print(dpg.get_item_children(y_axis))
+                            # leftmost side
+                            with dpg.child_window(width=815, height=450):
+                                with dpg.plot(label='Customer 2018 Transaction History', width=800, anti_aliased=True) as self.single_customer_transaction_volume_plot:
+                                    x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
+                                    y_axis = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Amount per Month (USD)')
                                 
+                                    dpg.set_axis_limits(x_axis, 1, 12)
+                                    dpg.set_axis_limits(y_axis, 0, 2000)
+                                    dpg.set_axis_ticks(x_axis, [[str(num), num] for num in range(1, 13)])
+                                    dpg.add_line_series(parent=dpg.last_item(), x=[], y=[])
+                                
+                                # print(self.single_customer_transaction_volume_plot)
+                                # print(x_axis, y_axis, series)
+                                # print(dpg.get_item_children(self.single_customer_transaction_volume_plot))
+                                # print(dpg.get_item_info(series)['parent'])
+                                # print(dpg.get_item_children(y_axis))
+                                    
 
                                                                                                                                                                                             
 
                     with dpg.group(horizontal=True):
                         dpg.add_text('Results')
-                        dpg.add_radio_button(("Edit Mode", "Report Mode"), callback=self.edit_or_report_mode, horizontal=True)                        
+                        radio = dpg.add_radio_button(("Edit Mode", "Report Mode"), callback=self.edit_or_report_mode, horizontal=True)                        
 
-                    with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
-                                resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
-                                borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.customer_table:
-                                pass  
+                        with dpg.item_handler_registry() as switched_modes:
+                            dpg.add_item_clicked_handler(callback=self.refresh_search_like_input)
+                        
+                        dpg.bind_item_handler_registry(radio, switched_modes)
+
+
+                    with dpg.child_window(border=False) as customer_table_window:
+                        with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                    resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                    borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.customer_table:
+                                    pass  
+                        
+
+                with dpg.theme() as customer_table_theme:
+                    with dpg.theme_component(dpg.mvButton):
+                        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 15, category=dpg.mvThemeCat_Core)
+                        dpg.add_theme_color(dpg.mvThemeCol_Button, value=(40, 255, 175, 232), category=dpg.mvThemeCat_Core)
+                        dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, value=(104, 255, 199, 232), category=dpg.mvThemeCat_Core)
+                        dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, value=(193, 255, 232, 232), category=dpg.mvThemeCat_Core)
+                        dpg.add_theme_color(dpg.mvThemeCol_Text, value=(0, 0, 0, 255))
+                
+                dpg.bind_item_theme(customer_table_window, theme=customer_table_theme)
+                        
                         
                         
