@@ -59,6 +59,7 @@ def event_handler():
             dpg.configure_item(viewport_query_button, enabled=False)
 
 
+# dpg.bind_item_font(saap_window.piechart_report_group, font=inter_regular_15)
 
 
 
@@ -69,6 +70,27 @@ dpg.create_viewport(title='Data Explorer', width=2000, height=1200)
 
 dpg.show_style_editor()
 dpg.show_item_registry()
+
+with dpg.font_registry():
+    inter_regular_18 = dpg.add_font('Font/Inter/Inter.ttf', 18)
+    inter_regular_15 = dpg.add_font('Font/Inter/Inter.ttf', 15)
+
+
+
+with dpg.viewport_menu_bar():
+    login_window.window(default_login=db_user, default_pass=db_password, external_callback=event_handler)
+    
+    # package this
+    viewport_query_button = dpg.add_button(label='Query Portal', callback=query_window.toggle)
+    vieport_saap_button = dpg.add_button(label='Business Analytics Dashboard', callback=saap_window.toggle)
+    viewport_customer_button = dpg.add_button(label='Customers Database', callback=customer_window.toggle)
+    query_window.window()
+    saap_window.window()
+    customer_window.window()
+
+#show_demo()
+
+
 
 with dpg.theme() as global_theme:
     with dpg.theme_component(dpg.mvAll):
@@ -117,6 +139,7 @@ with dpg.theme() as global_theme:
         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
         dpg.add_theme_color(dpg.mvPlotCol_Line, (38, 255, 144, 255), category=dpg.mvThemeCat_Plots)
 
+
         # window styles
         dpg.add_theme_style(dpg.mvStyleVar_WindowRounding, 6, category=dpg.mvThemeCat_Core)
         dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 6, category=dpg.mvThemeCat_Core)
@@ -130,23 +153,49 @@ with dpg.theme() as global_theme:
         dpg.add_theme_color(dpg.mvThemeCol_Text, value=(0, 0, 0, 255))
 
 
+
+
+
+
+with dpg.theme() as analytics_theme:
+    with dpg.theme_component(dpg.mvAll):
+        dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 0, 0), category=dpg.mvThemeCat_Core)
+        dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (32, 32, 0, 0), category=dpg.mvThemeCat_Core)
+    
+    with dpg.theme_component(dpg.mvPlot):
+        dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
+        dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
+    
+
+with dpg.theme() as customer_analytics_theme:
+    with dpg.theme_component(dpg.mvPlot):
+        dpg.add_theme_color(dpg.mvPlotCol_Fill, (0, 255, 113, 255), category=dpg.mvThemeCat_Plots)
+
+
+dpg.bind_font(inter_regular_18)
+dpg.bind_item_font(saap_window.piechart_report_group, font=inter_regular_15)
+dpg.bind_item_font(saap_window.state_transaction_by_type_group, font=inter_regular_15)
+dpg.bind_item_font(saap_window.region_plot_group, font=inter_regular_15)
+
+
+
 dpg.bind_theme(global_theme)
 
 
+dpg.bind_item_theme(saap_window.region_plot_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.region_report_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.piechart_report_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.transaction_count_and_volume_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.transaction_by_state_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.big_graphs_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.company_plot_big_graphs_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.state_transaction_by_type_group, theme=analytics_theme)
+dpg.bind_item_theme(saap_window.state_region_dropdown_group, theme=analytics_theme)
+
+dpg.bind_item_theme(saap_window.big_graphs_group, theme=customer_analytics_theme)
 
 
-with dpg.viewport_menu_bar():
-    login_window.window(default_login=db_user, default_pass=db_password, external_callback=event_handler)
-    
-    # package this
-    viewport_query_button = dpg.add_button(label='Query Portal', callback=query_window.toggle)
-    vieport_saap_button = dpg.add_button(label='Business Analytics Dashboard', callback=saap_window.toggle)
-    viewport_customer_button = dpg.add_button(label='Customers Database', callback=customer_window.toggle)
-    query_window.window()
-    saap_window.window()
-    customer_window.window()
 
-#show_demo()
 
 dpg.show_viewport()
 dpg.start_dearpygui()
@@ -158,5 +207,8 @@ def close(connection: ConnectionHandler):
         connection.close_connection()
     except AttributeError:
         pass
+
+
+
 
 close(connection)
