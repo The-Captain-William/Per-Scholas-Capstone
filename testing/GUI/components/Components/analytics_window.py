@@ -70,6 +70,12 @@ class SaapPortal(GenericContainerContext):
         self.set_company_linegraph(2018)
         self.month_day_transaction_bucket(2018)
 
+        
+
+
+
+
+
     def get_company_transaction_volume_year(self, year):
         # tbh this is fast af 🔥
         query = f"""
@@ -150,9 +156,14 @@ class SaapPortal(GenericContainerContext):
         dpg.set_axis_limits(y_axis_company, ymin, ymax)
 
         for index, month in enumerate(x_ticks_monthly):
+            # famoose the goose
+            if month[1] == 9 or month[1] == 11:
+                y_offset = month_total[index] * 0.997
+            else:
+                y_offset = month_total[index] * 1.009 
             dpg.add_plot_annotation(parent=self.company_plot,
                                     label=f'TV:${month_total[index]:,}\nBB:{branch_code[index]}\nBV:{branch_total[index]:,}\nPC {percent_total[index]}%',
-                                    default_value=(month[1], month_total[index] * 1.009))
+                                    default_value=(month[1], y_offset))
 
 
 
@@ -762,12 +773,12 @@ class SaapPortal(GenericContainerContext):
 
                             with dpg.group():
                                 # graph 1, total sales per month
-                                with dpg.group():
+                                with dpg.group() as self.company_plot_big_graphs_group:
                                     with dpg.plot(height=400, width=1490, anti_aliased=True) as self.company_plot:
                                         pass
                             # group containing two graphs
                             
-                            with dpg.group():
+                            with dpg.group() as self.big_graphs_group:
                                 with dpg.group(horizontal=True, horizontal_spacing=0):
                                     with dpg.child_window(border=False, width=1490, height=400) as self.candle_window:
                                         with dpg.plot(height=400, width=1490, anti_aliased=True) as self.candle_company_plot:
@@ -918,7 +929,7 @@ class SaapPortal(GenericContainerContext):
                         # Transactions 3: Transactions for branches by state
                         with dpg.tab(label='Transactions by State'):
                             with dpg.group(horizontal=True):
-                                with dpg.group():  # company, state, region time series
+                                with dpg.group() as self.transaction_by_state_group:  # company, state, region time series
                                     
                                     # company
                                     with dpg.plot(label='Company Transaction Volume for Year', anti_aliased=True) as self.plot_state_vs_company_transactions:
@@ -995,24 +1006,29 @@ class SaapPortal(GenericContainerContext):
 
 
                                     # state transaction type pie chart
-                                    with dpg.plot(label='State Transaction Volume by Type', no_mouse_pos=True, anti_aliased=True, equal_aspects=True) as self.piechart_transaction_value_per_type_given_state:
-                                        dpg.add_plot_legend()
-    
-                                        # x axis
-                                        self.piechart_state_x_axis = dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
-
-                                        # axis limits
-                                        #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
-                                        #dpg.set_axis_limits()
-                                        
-                                        # plot, pie chart ⭐
-                                        with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.transaction_types_y_axis:
-                                            self.piechart_state_data = dpg.add_pie_series(0.5, 0.5, 0.5, 
-                                                                                                self.transaction_value_per_type_given_state, 
-                                                                                                self.transaction_value_per_type_given_state_strings,
-                                                                                                format='%0.2f')
-                                    
                                     with dpg.group():
+                                        dpg.add_text('State Transaction Volume by Type')
+
+                                        with dpg.group() as self.state_transaction_by_type_group:
+
+                                            with dpg.plot(no_mouse_pos=True, anti_aliased=True, equal_aspects=True) as self.piechart_transaction_value_per_type_given_state:
+                                                dpg.add_plot_legend()
+            
+                                                # x axis
+                                                self.piechart_state_x_axis = dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+
+                                                # axis limits
+                                                #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
+                                                #dpg.set_axis_limits()
+                                                
+                                                # plot, pie chart ⭐
+                                                with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.transaction_types_y_axis:
+                                                    self.piechart_state_data = dpg.add_pie_series(0.5, 0.5, 0.5, 
+                                                                                                        self.transaction_value_per_type_given_state, 
+                                                                                                        self.transaction_value_per_type_given_state_strings,
+                                                                                                        format='%0.2f')
+                                        
+                                    with dpg.group() as self.transaction_count_and_volume_group:
                                         with dpg.plot(label='Transaction Count and Volume', anti_aliased=True) as self.plot_state_vs_company_transactions_2:
                                             
                                             dpg.add_plot_legend()
@@ -1045,50 +1061,52 @@ class SaapPortal(GenericContainerContext):
                                             dpg.add_text(wrap=325)
                                             dpg.add_text(wrap=325)
                                     
-                                    
-                                    with dpg.group() as self.piechart_report_group:
-                                        with dpg.plot(label='State Transactions as a Percent of Total Transactions', no_mouse_pos=True, anti_aliased=True, equal_aspects=True):
-                                            dpg.add_plot_legend()
-                                    
-                                            # x axis
-                                            dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
-                                            
-                                            
-                                                # axis limits
-                                                #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
-                                                #dpg.set_axis_limits()
-                                            
-                                                # plot, pie chart ⭐
-                                            with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.company_state_percent:
-                                                #state_over_company = self.state_transactions_year / self.total_transactions_year
-
-                                                self.pie_state_company = dpg.add_pie_series(0.5, 0.5, 0.5,
-                                                            [], 
-                                                            [],
-                                                            format='%0.2f')
-                                    
                                     with dpg.group():
-                                        with dpg.plot(label='Region Contribution to State Transaction', anti_aliased=True, equal_aspects=True):
-                                            dpg.add_plot_legend()
-                                    
-                                            # x axis
-                                            dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
-                                            
-                                            
-                                                # axis limits
-                                                #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
-                                                #dpg.set_axis_limits()
-                                            
-                                                # plot, pie chart ⭐
-                                            with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.region_state_percent:
-                                                #state_over_company = self.state_transactions_year / self.total_transactions_year
+                                        dpg.add_text('State Transactions as a Percent of Total Transactions')
+                                        with dpg.group() as self.piechart_report_group:
+                                            with dpg.plot(no_mouse_pos=True, anti_aliased=True, equal_aspects=True):
+                                                dpg.add_plot_legend()
+                                        
+                                                # x axis
+                                                dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+                                                
+                                                
+                                                    # axis limits
+                                                    #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
+                                                    #dpg.set_axis_limits()
+                                                
+                                                    # plot, pie chart ⭐
+                                                with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.company_state_percent:
+                                                    #state_over_company = self.state_transactions_year / self.total_transactions_year
 
-                                                self.pie_state_region = dpg.add_pie_series(0.5, 0.5, 0.5,
-                                                            [], 
-                                                            [],
-                                                            format='%0.2f')
+                                                    self.pie_state_company = dpg.add_pie_series(0.5, 0.5, 0.5,
+                                                                [], 
+                                                                [],
+                                                                format='%0.2f')
+                                    with dpg.group():
+                                        dpg.add_text('Region Contribution to State Transaction', indent=20)
+                                        with dpg.group() as self.region_plot_group:
+                                            with dpg.plot(anti_aliased=True, equal_aspects=True):
+                                                dpg.add_plot_legend() 
+                                        
+                                                # x axis
+                                                dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+                                                
+                                                
+                                                    # axis limits
+                                                    #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
+                                                    #dpg.set_axis_limits()
+                                                
+                                                    # plot, pie chart ⭐
+                                                with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.region_state_percent:
+                                                    #state_over_company = self.state_transactions_year / self.total_transactions_year
 
-                                with dpg.group():  # state dropdown, region dropdown
+                                                    self.pie_state_region = dpg.add_pie_series(0.5, 0.5, 0.5,
+                                                                [], 
+                                                                [],
+                                                                format='%0.2f')
+
+                                with dpg.group() as self.state_region_dropdown_group:  # state dropdown, region dropdown
 
                                     with dpg.child_window(indent=40, border=False):
                                 
@@ -1207,4 +1225,36 @@ class SaapPortal(GenericContainerContext):
                                 with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                                             resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
                                             borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_state:
-                                            pass  
+                                            pass
+
+        # with dpg.theme() as analytics_theme:
+        #     with dpg.theme_component(dpg.mvAll):
+        #         dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 0, 0), category=dpg.mvThemeCat_Core)
+        #         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (32, 32, 0, 0), category=dpg.mvThemeCat_Core)
+            
+        #     with dpg.theme_component(dpg.mvPlot):
+        #         dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
+        #         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
+
+        
+        # dpg.bind_item_theme(self.region_plot_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.region_report_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.piechart_report_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.transaction_count_and_volume_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.transaction_by_state_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.big_graphs_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.company_plot_big_graphs_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.state_transaction_by_type_group, theme=analytics_theme)
+        # dpg.bind_item_theme(self.state_region_dropdown_group, theme=analytics_theme)
+
+
+        # with dpg.font_registry():
+        #     inter_regular_15 = dpg.add_font('Font/Inter/Inter.ttf', 15)
+        #     # for pie charts 
+
+        # dpg.bind_item_font(self.piechart_report_group, font=inter_regular_15)
+        # dpg.bind_item_font(self.state_transaction_by_type_group, font=inter_regular_15)
+
+
+
+        
