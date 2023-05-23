@@ -140,14 +140,14 @@ class QueryPortal(GenericContainerContext):
                 with dpg.group(horizontal=True):
                     with dpg.tab_bar():
                         with dpg.tab(label='All Databases'):
-                            self.sql_databases_listbox = dpg.add_listbox(width=200, num_items=20, callback=self.__get_db_tables)  
+                            self.sql_databases_listbox = dpg.add_listbox(width=250, num_items=16, callback=self.__get_db_tables)  
                         with dpg.tab(label='Database Tables'):
-                            self.sql_tables_listbox = dpg.add_listbox(width=200, num_items=20, callback=self.__get_table_columns)  # 1 item is 17.5 px in height
+                            self.sql_tables_listbox = dpg.add_listbox(width=250, num_items=16, callback=self.__get_table_columns)  
 
                     # write queries here 
                     with dpg.tab_bar():
                         with dpg.tab(label='SQL Queries'):
-                            self.sql_query_box = dpg.add_input_text(multiline=True, height=350, width=-1, default_value='SQL Queries go here', tab_input=True) 
+                            self.sql_query_box = dpg.add_input_text(multiline=True, height=360, width=-1, default_value='SQL Queries go here', tab_input=True) 
                         def debug_dpg(item):
                             print(dpg.get_item_info(item))
                             print(dpg.get_value(item))
@@ -158,12 +158,11 @@ class QueryPortal(GenericContainerContext):
 
             # options underneath query writer input box
             with dpg.group(horizontal=True):
-                with dpg.child_window(height=45, width=200):
+                with dpg.child_window(height=60, width=200):
                     self.__db_selected = dpg.add_text(default_value='')
-                with dpg.child_window(height=45, autosize_x=True):
+                with dpg.child_window(height=60, autosize_x=True):
                     with dpg.group(horizontal=True):
                         self.__run_query_button = dpg.add_button(label='Run Query', callback=self.__run_query, tag='sql-button')
-                        dpg.add_button(label='test', callback=lambda: debug_dpg(self.sql_query_box))
 
                         dpg.add_button(label='Export..')
                         with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
