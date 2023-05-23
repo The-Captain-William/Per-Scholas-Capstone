@@ -617,7 +617,7 @@ class SaapPortal(GenericContainerContext):
         print(low, low_index)
         dpg.configure_item(group_text[1], default_value=f"{user_data}'s transaction volume yearly low was ${low:,}.")
         dpg.configure_item(group_text[3], default_value=f"{user_data}'s transaction volume yearly high was ${high:,}.")
-        dpg.configure_item(group_text[5], default_value=f"The Top 3 branches for handeling transactions in {user_data} are:")
+        dpg.configure_item(group_text[5], default_value=f"The Top 3 branches responsible for handeling transactions in {user_data} are:")
 
         for index, row in enumerate(self.connection[self.tag][region_branch_info][1:]):
             item = group_text[6:][index]
@@ -625,7 +625,7 @@ class SaapPortal(GenericContainerContext):
             count = row[1]
             address = row[2]
             total = row[3]
-            dpg.configure_item(item, default_value=f"Branch {branch}, located in {address} with a count of {count} transactions, and a total value of {total}.")
+            dpg.configure_item(item, default_value=f"Branch {branch}, located in {address} with a count of {count} transactions, and a total value of ${total:,}.")
 
 
   
@@ -650,7 +650,6 @@ class SaapPortal(GenericContainerContext):
         # each 1 tick is actually 3 units long
         # 1[2]-3, 4[5]-6, 7[8]-9, 10[11]-12
         # month1, month2, month3, month4
-        dpg.set_axis_ticks(self.plot_x_axis_zip, [[str(num), num * 3 ] for num in range(1, 13)])
 
         
         dpg.set_axis_limits(self.plot_y_axis_zip, 
@@ -730,39 +729,13 @@ class SaapPortal(GenericContainerContext):
         self._window_query_results(self.connection[self.tag][query], self.query_transactions_per_zip)
 
 
-    # def create_transaction_piechart(self):
-    #     self.transaction_types_pie_series_data = []
-    #     self.transaction_types_pie_series_strings = []
-
-    #     transaction_types_sum = """
-    #     SELECT 
-	# 	transaction_type AS `Transaction Type`,
-	# 	FORMAT(sum(transaction_value), 2) AS `Formatted Values`,
-	# 	ROUND(sum(transaction_value), 2) AS `Rounded Series Values`
-		
-    #     FROM cdw_sapp_credit_card
-    #     GROUP BY 1
-    #     """
-
-    #     self.connection.cur_execute(self.tag, transaction_types_sum, database="db_capstone")
-
-    #     self.transaction_types_pie_series_strings = [value[0] for value in self.connection[self.tag][transaction_types_sum][1:]]
-    #     self.transaction_types_pie_series_data = [value[2] for value in self.connection[self.tag][transaction_types_sum][1:]]
-
-    #     print(self.transaction_types_pie_series_strings)
-    #     print("")
-    #     print(self.transaction_types_pie_series_data)
-    #     dpg.configure_item(self.transaction_types_piechart, values=self.transaction_types_pie_series_data, labels=self.transaction_types_pie_series_strings)
-        
-    #     self._window_query_results(self.connection[self.tag][transaction_types_sum], self.query_transactions_per_type)
-
 
     def window(self):
 
 
     # main window
 
-        with dpg.window(label='Business Analytics', width=1506, height=975, tag=self.tag):
+        with dpg.window(label='Business Analytics', width=1472, height=1051, tag=self.tag):
             with dpg.tab_bar():
 
                                                                     
@@ -826,434 +799,321 @@ class SaapPortal(GenericContainerContext):
                                             for index, month in enumerate(self.months_eng):
                                                 dpg.add_button(label=month, user_data=index, width=100, callback=self.granular_daily_transaction_plot)                    
 
-
-                
-
-                                                                            
-
-                                
-
-                            
-
-                                    
-
-                            # with dpg.group():
-                            #     with dpg.group(horizontal=True):
-
-                            #         with dpg.group():
-
-
-
-
-                            #         with dpg.group():
-
-                                    
-                            #         with dpg.popup(parent=dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
-                            #             dpg.add_listbox(items=[month for month in self.months_eng])
-
-                                        
-                                                                                
-
-                            # with dpg.child_window(border=False):
-                            #     dpg.add_spacer(height=15)
-
-
-                            
-                            # with dpg.group(horizontal=True):  # second group (buttons)
-                                
-                            #     with dpg.group(horizontal=True):
-                                    
-                            #         dpg.add_text('Between')
-                                    
-                            #         self.__start_date = dpg.add_button(label='start', width=100)
-                            #         with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
-                            #             dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u:dpg.configure_item(self.__start_date, label=a))
-                                    
-                            #         dpg.add_text('and')
-                                    
-                            #         self.__stop_date = dpg.add_button(label='stop', width=100)
-                            #         with dpg.popup(dpg.last_item(), mousebutton=dpg.mvMouseButton_Left):
-                                        
-                            #             dpg.add_listbox(width=90, num_items=3, items=['test' for _ in range(10)], callback=lambda s, a, u: dpg.configure_item(self.__stop_date, label=a))
-                                
-                            #     def clear_dates():
-                            #         for _ in range(2):
-                            #             dpg.configure_item(self.__start_date, label='start')
-                            #             dpg.configure_item(self.__stop_date, label='end')
-                                
-                            #     with dpg.group():    
-                            #         dpg.add_button(label='Search', width=160)
-                            #         dpg.add_button(label='Clear', width=160, callback=clear_dates)
-                            
-
-
-
-                        
-                            #     # Transaction 2 Plot
-                            #     with dpg.plot(width=480, height=450, no_mouse_pos=True):
-                            #         dpg.add_plot_legend()
-                                    
-                            #         # x axis
-                            #         self.transaction_types_x_axis = dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
-                                    
-                                    
-                            #         # axis limits
-                            #         #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
-                            #         #dpg.set_axis_limits()
-                                    
-                            #         # plot, pie chart ⭐
-                            #         with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.transaction_types_y_axis:
-                            #             self.transaction_types_piechart = dpg.add_pie_series(0.5, 0.5, 0.5, 
-                            #                                                                  self.transaction_types_pie_series_data, 
-                            #                                                                  self.transaction_types_pie_series_strings,
-                            #                                                                  format='%0.2f')
-
-
-                            #     with dpg.group():
-                            #         dpg.add_text('Transaction Types:')
-                            #         dpg.add_input_text(width=200, callback=lambda s, a:dpg.set_value(self.tansaction_filter_sets, a))  # decided to make everything a filter, its cleaner
-                            #         with dpg.tooltip(dpg.last_item()):
-                            #             dpg.add_text('Filter list')
-                            #         with dpg.child_window(width=200, height=160) as self.transaction_types:
-                            #             with dpg.filter_set() as self.tansaction_filter_sets:
-                            #                 pass
-                                    
-
-                            # dpg.add_button(label=f'Show Data', width= 200, callback=lambda: dpg.configure_item(self.transaction_popout_window, show=True, pos=dpg.get_mouse_pos()))
-                            # with dpg.window(label='Transaction Type Data for 2018', show=False, height=214, width=419) as self.transaction_popout_window:
-                            #     with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
-                            #                 resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
-                            #                 borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transactions_per_type:
-                            #                 pass     
-
                         # Transactions 3: Transactions for branches by state
                         with dpg.tab(label='Transactions by State'):
-                            with dpg.group(horizontal=True):
-                                with dpg.group() as self.transaction_by_state_group:  # company, state, region time series
+                            with dpg.group(horizontal=True) as transactions_state_group_outer:
+                                with dpg.group() as transactions_state_group_inner_right:
+                                    with dpg.group() as self.state_region_dropdown_group:  # state dropdown, region dropdown
+
+                                        with dpg.child_window(border=False, width=200, no_scrollbar=True):
                                     
-                                    # company
-                                    with dpg.plot(label='Company Transaction Volume for Year', anti_aliased=True) as self.plot_state_vs_company_transactions:
-                                        # x axis
-                                        self.plot_x_axis_company = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
-
-                                        # plot, line, x and y series dataset
-
-                                        # state vs company, y axis and plot
-                                        self.plot_y_axis_company = dpg.add_plot_axis(dpg.mvYAxis, label='Total Transaction Value')
-
-                                        # limits
-                                        dpg.set_axis_limits(self.plot_x_axis_company, 1, 12)
-                                        dpg.set_axis_limits(self.plot_y_axis_company, 0, 1000)
-
-                                        # ticks
-                                        self.x_ticks = [[f"{str(num)}", num] for num in range(1, 13)]
-                                        dpg.set_axis_ticks(self.plot_x_axis_company, self.x_ticks)
-                                        
-                                        self.plot_company_linechart = dpg.add_line_series(self.state_vs_total_transactions_x,
-                                                                                                self.total_transactions_year,
-                                                                                                parent=self.plot_y_axis_company
-                                        )
-                                            
-
-                                    # state
-                                    with dpg.plot(label='State Transaction Volume for Year', anti_aliased=True) as self.plot_state_vs_company_transactions_2:
-                                        self.plot_x_axis_state = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
-                                        
-
-                                        self.plot_y_axis_state = dpg.add_plot_axis(dpg.mvYAxis, label='Total Transaction Value')
-
-                                        self.plot_state_linechart = dpg.add_line_series(self.state_vs_total_transactions_x,
-                                                                                        self.state_transactions_year,
-                                                                                        parent=self.plot_y_axis_state
-
-                                        )
-                                        
-                                        dpg.set_axis_limits(self.plot_x_axis_state, 1, 12)
-                                        dpg.set_axis_ticks(self.plot_x_axis_state, self.x_ticks)
-                                    
-                                    # zip/region
-                                    with dpg.plot(label='Region Transaction Volume for Year', anti_aliased=True) as self.plot_zip_timeseries:
-                                        self.plot_x_axis_zip_timeseries = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
-                                        
-
-                                        self.plot_y_axis_zip_timeseries = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Value')
-
-                                        self.plot_zip_linechart = dpg.add_line_series(x=self.state_vs_total_transactions_x,
-                                                                                        y=[],
-                                                                                        parent=self.plot_y_axis_zip_timeseries)
-                                        # NOTE: refactor
-                                                                                                                                                                                                                        
-                                        dpg.set_axis_limits(self.plot_x_axis_zip_timeseries, 1, 12)
-                                        dpg.set_axis_ticks(self.plot_x_axis_zip_timeseries, self.x_ticks)
-
-                                    
-
-                                with dpg.group(): # state report, state pie chart, region count/vol
-                                    # state report 
-                                    with dpg.child_window(width=400, height=300, border=False):
-                                        dpg.add_text("State Report")
-                                        dpg.add_separator()
-                                        with dpg.group() as self.state_report_group:
-                                            dpg.add_text('States Contribution to Company', show_label=True)
-                                            dpg.add_text(wrap=325)
-                                            dpg.add_text('State Yearly Transaction Low')
-                                            dpg.add_text(wrap=325)
-                                            dpg.add_text('State Yearly Transaction High')
-                                            dpg.add_text(wrap=325)
-                                  
-
-
-
-
-                                    # state transaction type pie chart
-                                    with dpg.group():
-                                        dpg.add_text('State Transaction Volume by Type')
-
-                                        with dpg.group() as self.state_transaction_by_type_group:
-
-                                            with dpg.plot(no_mouse_pos=True, anti_aliased=True, equal_aspects=True) as self.piechart_transaction_value_per_type_given_state:
-                                                dpg.add_plot_legend()
-            
-                                                # x axis
-                                                self.piechart_state_x_axis = dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
-
-                                                # axis limits
-                                                #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
-                                                #dpg.set_axis_limits()
-                                                
-                                                # plot, pie chart ⭐
-                                                with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.transaction_types_y_axis:
-                                                    self.piechart_state_data = dpg.add_pie_series(0.5, 0.5, 0.5, 
-                                                                                                        self.transaction_value_per_type_given_state, 
-                                                                                                        self.transaction_value_per_type_given_state_strings,
-                                                                                                        format='%0.2f')
-                                        
-                                    with dpg.group() as self.transaction_count_and_volume_group:
-                                        with dpg.plot(label='Transaction Count and Volume', anti_aliased=True) as self.plot_state_vs_company_transactions_2:
-                                            
-                                            dpg.add_plot_legend()
-
-
-                                            self.plot_x_axis_zip = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
-                                            
-                                            self.plot_y_axis_zip = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Value')
-
-                                            dpg.set_axis_limits(self.plot_x_axis_zip, 1, 24)
-                                            #dpg.set_axis_ticks(self.plot_x_axis_zip, self.x_ticks)
-                                    
-
-                                    
-
-
-
-                                with dpg.group():  # region report, state contribution, region contribtion
-                                    with dpg.child_window(width=400, height=300, border=False):
-                                        dpg.add_text("Region Report")
-                                        dpg.add_separator()
-                                        with dpg.group() as self.region_report_group: 
-                                            dpg.add_text('Regions Yearly High')
-                                            dpg.add_text(wrap=325)
-                                            dpg.add_text('Regions Yearly Low')
-                                            dpg.add_text(wrap=325)
-                                            dpg.add_text('Branch Top 3')
-                                            dpg.add_text(wrap=325)
-                                            dpg.add_text(wrap=325)
-                                            dpg.add_text(wrap=325)
-                                            dpg.add_text(wrap=325)
-                                    
-                                    with dpg.group():
-                                        dpg.add_text('State Transactions as a Percent of Total Transactions')
-                                        with dpg.group() as self.piechart_report_group:
-                                            with dpg.plot(no_mouse_pos=True, anti_aliased=True, equal_aspects=True):
-                                                dpg.add_plot_legend()
-                                        
-                                                # x axis
-                                                dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
-                                                
-                                                
-                                                    # axis limits
-                                                    #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
-                                                    #dpg.set_axis_limits()
-                                                
-                                                    # plot, pie chart ⭐
-                                                with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.company_state_percent:
-                                                    #state_over_company = self.state_transactions_year / self.total_transactions_year
-
-                                                    self.pie_state_company = dpg.add_pie_series(0.5, 0.5, 0.5,
-                                                                [], 
-                                                                [],
-                                                                format='%0.2f')
-                                    with dpg.group():
-                                        dpg.add_text('Region Contribution to State Transaction', indent=20)
-                                        with dpg.group() as self.region_plot_group:
-                                            with dpg.plot(anti_aliased=True, equal_aspects=True):
-                                                dpg.add_plot_legend() 
-                                        
-                                                # x axis
-                                                dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
-                                                
-                                                
-                                                    # axis limits
-                                                    #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
-                                                    #dpg.set_axis_limits()
-                                                
-                                                    # plot, pie chart ⭐
-                                                with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.region_state_percent:
-                                                    #state_over_company = self.state_transactions_year / self.total_transactions_year
-
-                                                    self.pie_state_region = dpg.add_pie_series(0.5, 0.5, 0.5,
-                                                                [], 
-                                                                [],
-                                                                format='%0.2f')
-
-                                with dpg.group() as self.state_region_dropdown_group:  # state dropdown, region dropdown
-
-                                    with dpg.child_window(indent=40, border=False):
-                                
-                                        with dpg.group():
                                             with dpg.group():
-                                                dpg.add_spacer()
-                                                dpg.add_text('Transactions by State:')
-                                                dpg.add_input_text(width=200, callback=lambda s, a:dpg.set_value(self.state_filter_set, a))
-                                                with dpg.tooltip(dpg.last_item()):
-                                                    dpg.add_text('Filter list')
-                                                with dpg.child_window(width=200, height=160) as self.transaction_types:
-                                                    with dpg.filter_set() as self.state_filter_set:
-                                                        pass
-                                
-                                            dpg.add_button(label='Show State Data', width=200, callback=lambda: dpg.configure_item(self.state_popout_window, show=True, pos=dpg.get_mouse_pos(local=False)))                                    
-
-                                        with dpg.group():
-                                            dpg.add_spacer()
-                                            dpg.add_text('Select Regions by Zip codes:')
-                                            dpg.add_input_text(width=200, callback=lambda s, a: dpg.set_value(self.zip_state_filter_set, a))
-                                            with dpg.tooltip(dpg.last_item()):
-                                                dpg.add_text('Filter list')
-                                            # will populate with zip codes
-                                            with dpg.group():
-                                                with dpg.child_window(width=200, height=160) as self.zipcodes_by_state:
-                                                    with dpg.filter_set() as self.zip_state_filter_set:
-                                                        pass
-                                                dpg.add_button(label='Show Region Data', width=200, callback=lambda: dpg.configure_item(self.state_zip_popout_window, show=True, pos=dpg.get_mouse_pos(local=False)))
-                                            
-
-                                        with dpg.group():  # custom calendar b/c I don't need dates as granular as days for this data                                                            
-                                            dpg.add_spacer()
-                                            dpg.add_text('Year:')
-                                            date_data = dpg.add_listbox(items=[2018], num_items=2, width=200)                                                                                
-                                            with dpg.tooltip(date_data):
-                                                dpg.add_text('This dataset contains data from 2018 only')
-
-                                        dpg.add_button(width=200, label='All Regions *', callback=lambda: dpg.configure_item(self.all_regions_window, show=True, pos=dpg.get_mouse_pos(local=False)))
-                                        with dpg.tooltip(parent=dpg.last_item()):
-                                            dpg.add_text('Show all regions independent of state')
-
-                                        with dpg.window(show=False) as self.all_regions_window:
-                                            with dpg.group(horizontal=True):
-
-
-                                                with dpg.plot(width=480, height=450, anti_aliased=True, no_mouse_pos=True) as self.sales_per_zip_plot:
-                                                    # x and y axis
-                                                    self.sales_per_zip_plot_x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Month")
-                                                    self.sales_per_zip_plot_y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Sales Revenue in USD")
-                                                    # plot, line, x and y series dataset ⭐
-                                                    self.sales_per_zip_plot_line = dpg.add_line_series(self.total_dates, 
-                                                                        self.total_purchaes, 
-                                                                        parent=self.sales_per_zip_plot_y_axis, 
-                                                                        label='Total sales Revenue per Zipcode in 2018'
-                                                                        )
-                                                    # axis limits
-                                                    dpg.set_axis_limits(self.sales_per_zip_plot_x_axis, 1, 12)  # have to set limits this way and not direct through plot axis
-                                                    # arbitrary y axis limits, to prevent panning before loaded dataset and not have 0, 1 initial y values                                               
-                                                    dpg.set_axis_limits(self.sales_per_zip_plot_y_axis, 0, 1000)
-
-                                                    # x axis tickss
-                                                    ticks = [[f"{str(num)}", num] for num in range(1, 13)]
-                                                    dpg.set_axis_ticks(self.sales_per_zip_plot_x_axis, ticks) 
-                                            
                                                 with dpg.group():
-                                                    dpg.add_text('All Region zip codes:')
-                                                    dpg.add_input_text(width=200, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
+                                                    dpg.add_spacer()
+                                                    dpg.add_text('Transactions by State:')
+                                                    dpg.add_input_text(width=200, callback=lambda s, a:dpg.set_value(self.state_filter_set, a))
                                                     with dpg.tooltip(dpg.last_item()):
                                                         dpg.add_text('Filter list')
-                                                    
-                                                    # will populate with zip codes
-                                                    with dpg.child_window(width=200, height=160) as self.zipcodes:
-                                                        pass
-                                                        with dpg.filter_set() as self.zip_filter_set:
+                                                    with dpg.child_window(width=200, height=160) as self.transaction_types:
+                                                        with dpg.filter_set() as self.state_filter_set:
                                                             pass
-                                                                                                                                                        
-                                                    with dpg.group():  # custom calendar b/c I don't need dates as granular as days for this data                                                            
-                                                        date_data = dpg.add_listbox(items=[2018], num_items=2, width=200) 
+                                    
+                                                dpg.add_button(label='Show State Data', width=200, callback=lambda: dpg.configure_item(self.state_popout_window, show=True, pos=dpg.get_mouse_pos(local=False)))                                    
+
+                                            with dpg.group():
+                                                dpg.add_spacer()
+                                                dpg.add_text('Select Regions by Zip codes:')
+                                                dpg.add_input_text(width=200, callback=lambda s, a: dpg.set_value(self.zip_state_filter_set, a))
+                                                with dpg.tooltip(dpg.last_item()):
+                                                    dpg.add_text('Filter list')
+                                                # will populate with zip codes
+                                                with dpg.group():
+                                                    with dpg.child_window(width=200, height=160) as self.zipcodes_by_state:
+                                                        with dpg.filter_set() as self.zip_state_filter_set:
+                                                            pass
+                                                    dpg.add_button(label='Show Region Data', width=200, callback=lambda: dpg.configure_item(self.state_zip_popout_window, show=True, pos=dpg.get_mouse_pos(local=False)))
+                                                
+
+                                            with dpg.group():  # custom calendar b/c I don't need dates as granular as days for this data                                                            
+                                                dpg.add_spacer()
+                                                dpg.add_text('Year:')
+                                                date_data = dpg.add_listbox(items=[2018], num_items=2, width=200)                                                                                
+                                                with dpg.tooltip(date_data):
+                                                    dpg.add_text('This dataset contains data from 2018 only')
+
+                                            dpg.add_button(width=200, label='All Regions *', callback=lambda: dpg.configure_item(self.all_regions_window, show=True, pos=dpg.get_mouse_pos(local=False)))
+                                            with dpg.tooltip(parent=dpg.last_item()):
+                                                dpg.add_text('Show all regions independent of state')
+
+                                with dpg.group() as transactions_state_group_inner_left:
+                                    with dpg.child_window(border=False):
+                                    
+                                        with dpg.group(horizontal=True) as trans_state_row_1: # zip S; company yearly, state yearly, region
+                                            with dpg.group():
+                                                dpg.add_separator()
+                                                dpg.add_text('Company Transaction Volume for Year', indent=80)
+                                                dpg.add_separator()
+                                                with dpg.plot(anti_aliased=True) as self.plot_state_vs_company_transactions:
+                                                    # x axis
+                                                    self.plot_x_axis_company = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
+
+                                                    # plot, line, x and y series dataset
+
+                                                    # state vs company, y axis and plot
+                                                    self.plot_y_axis_company = dpg.add_plot_axis(dpg.mvYAxis, label='Total Transaction Value')
+
+                                                    # limits
+                                                    dpg.set_axis_limits(self.plot_x_axis_company, 1, 12)
+                                                    dpg.set_axis_limits(self.plot_y_axis_company, 0, 1000)
+
+                                                    # ticks
+                                                    self.x_ticks = [[f"{str(num)}", num] for num in range(1, 13)]
+                                                    dpg.set_axis_ticks(self.plot_x_axis_company, self.x_ticks)
                                                     
-                                                    with dpg.tooltip(date_data):
-                                                        dpg.add_text('This dataset contains data from 2018 only')                                                                
+                                                    self.plot_company_linechart = dpg.add_line_series(self.state_vs_total_transactions_x,
+                                                                                                            self.total_transactions_year,
+                                                                                                            parent=self.plot_y_axis_company
+                                                    )
                                                     
-                                                    dpg.add_button(label=f'Show Data', width= 200, callback=lambda: dpg.configure_item(self.zip_popout_window, show=True, pos=dpg.get_mouse_pos(local=False)))
-                                                    with dpg.window(show=False,label='Zipcode Data for: ') as self.zip_popout_window:
-                                                            with dpg.child_window(height=300,width=300,border=False):  
-                                                                with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
-                                                                            resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
-                                                                            borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transactions_per_zip:
-                                                                            pass   
+
+                                            # state
+                                            with dpg.group():
+                                                dpg.add_separator()
+                                                dpg.add_text('State Transaction Volume for Year', indent=80)
+                                                dpg.add_separator()
+                                                with dpg.plot(anti_aliased=True) as self.plot_state_vs_company_transactions_2:
+                                                    self.plot_x_axis_state = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
+                                                    
+
+                                                    self.plot_y_axis_state = dpg.add_plot_axis(dpg.mvYAxis, label='Total Transaction Value')
+
+                                                    self.plot_state_linechart = dpg.add_line_series(self.state_vs_total_transactions_x,
+                                                                                                    self.state_transactions_year,
+                                                                                                    parent=self.plot_y_axis_state
+
+                                                    )
+                                                    
+                                                    dpg.set_axis_limits(self.plot_x_axis_state, 1, 12)
+                                                    dpg.set_axis_ticks(self.plot_x_axis_state, self.x_ticks)
+                                            
+                                            # zip/region
+                                            with dpg.group():
+                                                dpg.add_separator()
+                                                dpg.add_text('Region Transaction Volume for Year', indent=80)
+                                                dpg.add_separator()
+                                                with dpg.plot(anti_aliased=True) as self.plot_zip_timeseries:
+                                                    self.plot_x_axis_zip_timeseries = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
+                                                    
+
+                                                    self.plot_y_axis_zip_timeseries = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Value')
+
+                                                    self.plot_zip_linechart = dpg.add_line_series(x=self.state_vs_total_transactions_x,
+                                                                                                    y=[],
+                                                                                                    parent=self.plot_y_axis_zip_timeseries)
+                                                    # NOTE: refactor
+                                                                                                                                                                                                                                    
+                                                    dpg.set_axis_limits(self.plot_x_axis_zip_timeseries, 1, 12)
+                                                    dpg.set_axis_ticks(self.plot_x_axis_zip_timeseries, self.x_ticks)
+
+                                        with dpg.group(horizontal=True) as trans_state_row_2:
+                                            with dpg.group():
+                                                dpg.add_separator()
+                                                dpg.add_text("State Report", indent=120)
+                                                dpg.add_separator()
+                                                with dpg.child_window(width=400, height=300, border=False):
+                                                    with dpg.group() as self.state_report_group:
+                                                        dpg.add_text('States Contribution to Company', color=(146, 208, 255))
+                                                        dpg.add_text(wrap=400)
+                                                        dpg.add_text('State Yearly Transaction Low', color=(146, 208, 255))
+                                                        dpg.add_text(wrap=400)
+                                                        dpg.add_text('State Yearly Transaction High', color=(146, 208, 255))
+                                                        dpg.add_text(wrap=400)
+                                                
+
+                                            with dpg.group():
+                                                dpg.add_separator()
+                                                dpg.add_text('State Transactions as a Percent of Total Transactions')
+                                                dpg.add_separator()
+                                                with dpg.group() as self.piechart_report_group:
+                                                    with dpg.plot(no_mouse_pos=True, anti_aliased=True, equal_aspects=True):
+                                                        dpg.add_plot_legend()
+                                                
+                                                        # x axis
+                                                        dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+                                                        
+                                                        
+                                                            # axis limits
+                                                            #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
+                                                            #dpg.set_axis_limits()
+                                                        
+                                                            # plot, pie chart ⭐
+                                                        with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.company_state_percent:
+                                                            #state_over_company = self.state_transactions_year / self.total_transactions_year
+
+                                                            self.pie_state_company = dpg.add_pie_series(0.5, 0.5, 0.5,
+                                                                        [], 
+                                                                        [],
+                                                                        format='%0.2f')
+                                                            
+                                            with dpg.group():
+                                                dpg.add_separator()
+                                                dpg.add_text('State Transaction Volume by Type', indent=80)
+                                                dpg.add_separator()
+                                                with dpg.group() as self.state_transaction_by_type_group:
+                                                    with dpg.plot(no_mouse_pos=True, anti_aliased=True, equal_aspects=True) as self.piechart_transaction_value_per_type_given_state:
+                                                        dpg.add_plot_legend()
+                    
+                                                        # x axis
+                                                        self.piechart_state_x_axis = dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+
+                                                        # axis limits
+                                                        #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
+                                                        #dpg.set_axis_limits()
+                                                        
+                                                        # plot, pie chart ⭐
+                                                        with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.transaction_types_y_axis:
+                                                            self.piechart_state_data = dpg.add_pie_series(0.5, 0.5, 0.5, 
+                                                                                                                self.transaction_value_per_type_given_state, 
+                                                                                                                self.transaction_value_per_type_given_state_strings,
+                                                                                                                format='%0.2f')
+                                            
+
+                                        with dpg.group(horizontal=True) as trans_state_row_3:
+                                            with dpg.group():  # region report, state contribution, region contribtion
+                                                dpg.add_separator()
+                                                dpg.add_text("Region Report", indent=120)
+                                                dpg.add_separator()
+                                                with dpg.child_window(width=400, height=400, border=False):
+                                                    with dpg.group() as self.region_report_group: 
+                                                        dpg.add_text('Regions Yearly High', color=(146, 208, 255))
+                                                        dpg.add_text(wrap=400)
+                                                        dpg.add_text('Regions Yearly Low', color=(146, 208, 255))
+                                                        dpg.add_text(wrap=400)
+                                                        dpg.add_text('Branch Top 3', color=(146, 208, 255))
+                                                        dpg.add_text(wrap=400)
+                                                        dpg.add_text(wrap=400)
+                                                        dpg.add_text(wrap=400)
+                                                        dpg.add_text(wrap=400)
+
+
+                                            with dpg.group():
+                                                dpg.add_separator()
+                                                dpg.add_text('Region Contribution to State Transaction', indent=40)
+                                                dpg.add_separator()
+                                                with dpg.group() as self.region_plot_group:
+                                                    with dpg.plot(anti_aliased=True, equal_aspects=True):
+                                                        dpg.add_plot_legend() 
+                                                
+                                                        # x axis
+                                                        dpg.add_plot_axis(dpg.mvXAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True)
+                                                        
+                                                        
+                                                            # axis limits
+                                                            #dpg.set_axis_limits(self.transaction_types_x_axis, 0, 1)
+                                                            #dpg.set_axis_limits()
+                                                        
+                                                            # plot, pie chart ⭐
+                                                        with dpg.plot_axis(dpg.mvYAxis, no_gridlines=True, no_tick_marks=True, no_tick_labels=True) as self.region_state_percent:
+                                                            #state_over_company = self.state_transactions_year / self.total_transactions_year
+
+                                                            self.pie_state_region = dpg.add_pie_series(0.5, 0.5, 0.5,
+                                                                        [], 
+                                                                        [],
+                                                                        format='%0.2f')
+
+                                            with dpg.group() as self.transaction_count_and_volume_group:
+                                                dpg.add_separator()
+                                                dpg.add_text('Transaction Count and Volume', indent=80)
+                                                dpg.add_separator()
+                                                with dpg.plot(anti_aliased=True) as self.plot_state_vs_company_transactions_2:
+                                                    
+                                                    dpg.add_plot_legend()
+
+
+                                                    self.plot_x_axis_zip = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
+                                                    
+                                                    self.plot_y_axis_zip = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Value')
+
+                                                    dpg.set_axis_limits(self.plot_x_axis_zip, 1, 24)
+                                                    dpg.set_axis_ticks(self.plot_x_axis_zip, [[str(num), num * 3 ] for num in range(1, 13)])
+                                                    #dpg.set_axis_ticks(self.plot_x_axis_zip, self.x_ticks)
+
+                                                # company
+
+                                    with dpg.window(show=False, width=713, height=495, min_size=(713, 495), max_size=(713, 495)) as self.all_regions_window:
+                                        with dpg.group(horizontal=True):
+                                            with dpg.group():
+                                                dpg.add_text('All Region zip codes:')
+                                                dpg.add_input_text(width=200, callback=lambda s, a: dpg.set_value(self.zip_filter_set, a))
+                                                with dpg.tooltip(dpg.last_item()):
+                                                    dpg.add_text('Filter list')
+                                                
+                                                # will populate with zip codes
+                                                with dpg.child_window(width=200, height=160) as self.zipcodes:
+                                                    pass
+                                                    with dpg.filter_set() as self.zip_filter_set:
+                                                        pass
+                                                                                                                                                    
+                                                with dpg.group():  # custom calendar b/c I don't need dates as granular as days for this data                                                            
+                                                    date_data = dpg.add_listbox(items=[2018], num_items=2, width=200) 
+                                                
+                                                
+                                                with dpg.tooltip(date_data):
+                                                    dpg.add_text('This dataset contains data from 2018 only')                                                                
+                                                
+                                                dpg.add_button(label=f'Show Data', width= 200, callback=lambda: dpg.configure_item(self.zip_popout_window, show=True, pos=dpg.get_mouse_pos(local=False)))
+
+
+                                            with dpg.plot(width=480, height=450, anti_aliased=True, no_mouse_pos=True) as self.sales_per_zip_plot:
+                                                # x and y axis
+                                                self.sales_per_zip_plot_x_axis = dpg.add_plot_axis(dpg.mvXAxis, label="Month")
+                                                self.sales_per_zip_plot_y_axis = dpg.add_plot_axis(dpg.mvYAxis, label="Sales Revenue in USD")
+                                                # plot, line, x and y series dataset ⭐
+                                                self.sales_per_zip_plot_line = dpg.add_line_series(self.total_dates, 
+                                                                    self.total_purchaes, 
+                                                                    parent=self.sales_per_zip_plot_y_axis, 
+                                                                    label='Total sales Revenue per Zipcode in 2018'
+                                                                    )
+                                                # axis limits
+                                                dpg.set_axis_limits(self.sales_per_zip_plot_x_axis, 1, 12)  # have to set limits this way and not direct through plot axis
+                                                # arbitrary y axis limits, to prevent panning before loaded dataset and not have 0, 1 initial y values                                               
+                                                dpg.set_axis_limits(self.sales_per_zip_plot_y_axis, 0, 1000)
+
+                                                # x axis tickss
+                                                ticks = [[f"{str(num)}", num] for num in range(1, 13)]
+                                                dpg.set_axis_ticks(self.sales_per_zip_plot_x_axis, ticks) 
+                                    
+
+                                            
+                                            
+                                            with dpg.window(show=False,label='Zipcode Data for: ', width=356, height=400, min_size=(356, 400), max_size=(356, 400)) as self.zip_popout_window:
+                                                    with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                                resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                                borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transactions_per_zip:
+                                                                pass   
 
 
 
-                        
-                        
-
-                        
-                        # SQL TABLES
-
-                            # Region
-                            with dpg.window(label='Transactions by Region Breakdown', show=False, width=566, height=329) as self.state_zip_popout_window:
-                                with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
-                                            resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
-                                            borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_zip:
-                                            pass  
                                 
-                            # # tbd
-                            # with dpg.window(label='Transactions by State Breakdown', show=False, width=475, height=214) as self.state_popout_window:
-                            #     with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
-                            #                 resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
-                            #                 borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_state:
-                            #                 pass          
+                                
+
+                                
+                                # SQL TABLES
+
+                                    # Region
+                                    with dpg.window(label='Transactions by Region Breakdown', show=False, width=615, height=405, min_size=(615, 405), max_size=(615, 405)) as self.state_zip_popout_window:
+                                        with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                    resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                    borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_zip:
+                                                    pass  
 
 
-                            # State
-                            with dpg.window(label='Transactions by State Breakdown', show=False, width=475, height=214) as self.state_popout_window:
-                                with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
-                                            resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
-                                            borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_state:
-                                            pass
-
-        # with dpg.theme() as analytics_theme:
-        #     with dpg.theme_component(dpg.mvAll):
-        #         dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 0, 0), category=dpg.mvThemeCat_Core)
-        #         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (32, 32, 0, 0), category=dpg.mvThemeCat_Core)
-            
-        #     with dpg.theme_component(dpg.mvPlot):
-        #         dpg.add_theme_color(dpg.mvThemeCol_FrameBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
-        #         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (0, 0, 0, 0), category=dpg.mvThemeCat_Plots)
-
-        
-        # dpg.bind_item_theme(self.region_plot_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.region_report_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.piechart_report_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.transaction_count_and_volume_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.transaction_by_state_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.big_graphs_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.company_plot_big_graphs_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.state_transaction_by_type_group, theme=analytics_theme)
-        # dpg.bind_item_theme(self.state_region_dropdown_group, theme=analytics_theme)
-
-
-        # with dpg.font_registry():
-        #     inter_regular_15 = dpg.add_font('Font/Inter/Inter.ttf', 15)
-        #     # for pie charts 
-
-        # dpg.bind_item_font(self.piechart_report_group, font=inter_regular_15)
-        # dpg.bind_item_font(self.state_transaction_by_type_group, font=inter_regular_15)
+                                    # State
+                                    with dpg.window(label='Transactions by State Breakdown', show=False, width=521, height=256, min_size=(521, 256), max_size=(521, 256)) as self.state_popout_window:
+                                        with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
+                                                    resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
+                                                    borders_outerV=True, borders_innerH=True, borders_outerH=True) as self.query_transaction_value_per_type_given_state:
+                                                    pass
 
 
 
