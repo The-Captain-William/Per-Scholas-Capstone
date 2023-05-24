@@ -3,7 +3,8 @@ from typing import Optional, Union
 from types import FunctionType
 import numpy as np
 from Components.generic_container import GenericContainerContext, ConnectionHandler, DBError
-from sorting_functions import capture_min_max
+from Components.helper_functions.sorting_functions import capture_min_max
+
 
 class SaapPortal(GenericContainerContext):
 
