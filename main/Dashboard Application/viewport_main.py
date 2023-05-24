@@ -79,6 +79,8 @@ with dpg.viewport_menu_bar():
     saap_window.window()
     customer_window.window()
 
+dpg.set_viewport_large_icon('Components/img/icon.ico')
+dpg.set_viewport_small_icon('Components/img/icon.ico')
 
 # THEMES # 
 with dpg.theme() as global_theme:
