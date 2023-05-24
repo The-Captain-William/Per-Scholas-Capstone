@@ -1,7 +1,8 @@
 # Per Scholas Data Engineering Bootcamp Capstone Project 
 <br><br>
 
-👉🏻 For Current and Future Updates, click [here](#further-considerations-and-future-updates)
+👉🏻 For Current and Future Update plans, click [here](#further-considerations-and-future-updates) <br>
+👉🏻 For a Roadmap on what I'm currently working on, click [here](Roadmap.md)
 
 ## Introduction:
 
@@ -35,7 +36,7 @@ The capstone is divided into several components:
     <h3>ETL </h3>
     </td>
     <td>
-    <h3>Terminal Interface</h3>
+    <h3>Front End Interface</h3>
     </td>
     <td>
     <h3>Data Visualization</h3>
@@ -50,6 +51,10 @@ The capstone is divided into several components:
   <a href='https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL/ETL_Part_2_The_ETL_Process.ipynb'>Part Two:</a><br>My Entire ETL Workflow, including a few tips and tricks
   </p>
   </td>
+
+<td>
+<a href='https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/development/images/wip_sql_portal.png'>WIP Front-End User Portal</a>
+</td>
 
 </tr>
   
@@ -69,16 +74,20 @@ Languages: `Python` `SQL` <br>
 Major Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy`
 
 <br><br>
-### Terminal Interface
+### Front-End Interface
 ---
 **Outline:** <br>
-A User-Friendly Terminal Interface was built to abstract away SQL queries. 
+A User-Friendly Front-End Interface I'm calling the *Data Explorer* is being built to interact with sql servers.
 Using pyspark.sql and mysql.connector, a front end user can view and modify the contents of a SQL Database. 
+The goal is to be able to have two forms of interaction, direct SQL code and abstracted-away SQL queries using nodes with the 
+<a href='https://github.com/hoffstadt/DearPyGui'>DearPyGui</a> library. The user will be able to query, modify, and create graphs and visualizations directly from the Data Explorer. Could be very useful for datamarts.
+<br>
+<img src='https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/development/images/wip_sql_portal.png'>
 <br>
 
 **Technologies Used:**<br>
 Languages: `Python` `SQL` <br>
-Major Python Libraries: `pyspark.sql` `mysql.connector`
+Major Python Libraries: `pyspark.sql` `mysql.connector` `DearPyGui`
 <br>
 
 <br><br>
@@ -106,6 +115,7 @@ While I satisfied all of the requirements to land a perfect score on my capstone
 | 🛠     | In-Progress|
 |↗       | Up-Next     |
 
+This is just a birds-eye view. For a more granular look into progress check out my [Roadmap](Roadmap.md)
 
 ETL
 - [X] ✅ Create the SQL database through mysql.connector instead of pyspark.sql, allowing for more precise data types 
@@ -114,19 +124,15 @@ ETL
 - [ ] Compare the speeds of running pyspark.sql locally (using a single node) for the full ETL process with running pandas and discuss the appropriate use of each tool
 - [ ] introduce the <a href="https://github.com/pola-rs/polars">Polars</a> library and further discuss speeds
 
-Terminal
-- [ ] Command Line Front-End:
-  - [ ]  🛠 `#1` Rewrite all terminal code, creating more appropriate Classes for the terminal application 
-    - [ ] Consider using a library or writing my own library, if I can't find the tools I'm looking for
-  - [ ] Compile to .EXE
+Front-End
 
-- [ ] GUI Front-End
-  - [ ] Consider making a desktop GUI application with ctkinter (custom-tkinter)
+- [ ] GUI 
+  - [ ] 🛠 Make a desktop GUI application that can interact with the server and produce graphs based on user input
     - [ ] Compile to .EXE
   - [ ] Consider building a web-app to emulate the same functionality 
 
 Data Visualization
-- [ ] Redo matplot lib graphs to be more aesthetically pleasing, and more useful
+- [ ] Introduce extended graphing functionality and the ability to save rendered graphs created from the GUI
 - [ ] Introduce a few Tableau graphs with Tableau Public
 
 
@@ -134,3 +140,4 @@ Documentation and Packaging
 - [ ] Update README with todo tasks
 - [ ] Include documentation for each component on a seperate markdown file
   - [ ] Update README to link included documentation
+- [ ] Clean up all documentation
