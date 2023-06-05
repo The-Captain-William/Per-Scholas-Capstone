@@ -211,7 +211,7 @@ class SaapPortal(GenericContainerContext):
         self.time = [value[4] for value in self.connection[self.tag][query][1:]]
         self.x_ticks_value_per_day = [[f"{str(tick).replace('.', '/')}", index] for index, tick in enumerate(self.time)]
 
-        print(self.x_ticks_value_per_day)
+        #print(self.x_ticks_value_per_day)
         month = [value[1] for value in self.connection[self.tag][query][1:]]
 
 
@@ -255,15 +255,15 @@ class SaapPortal(GenericContainerContext):
         month_date_data = []
         x_axis_ticks = []
 
-        print(month_number, 'month')
+        #print(month_number, 'month')
 
         month_number += 1
 
         month_stop = (month_number - 1) * 28
         month_start = (month_number) * 28
 
-        print(month_start)
-        print(month_stop)
+        #print(month_start)
+        #print(month_stop)
 
         for absolute, index in enumerate(range(month_stop, month_start)):
             ymax = 0
@@ -278,9 +278,9 @@ class SaapPortal(GenericContainerContext):
         
 
 
-        print(month_number)
-        print(month_value_data)
-        print(x_axis_ticks)
+        #print(month_number)
+        #print(month_value_data)
+        #print(x_axis_ticks)
 
         self.stem = dpg.add_bar_series(parent=self.granular_y_axis,
                            x=month_date_data,
@@ -413,7 +413,7 @@ class SaapPortal(GenericContainerContext):
         f"{user_data}'s transaction volume yearly high was ${state_ymax:,}"
         ]
 
-        print(dpg.get_item_children(self.state_report_group))
+        #print(dpg.get_item_children(self.state_report_group))
         index = 0
         for num, item in enumerate(dpg.get_item_children(self.state_report_group)[1]):
             # iterate through all the items of the group, if a group num
@@ -486,7 +486,7 @@ class SaapPortal(GenericContainerContext):
                                      parent_window=self.zip_state_filter_set,
                                      callback=self.zip_state_callback)
         
-        print(region_contribution_to_state)
+        #print(region_contribution_to_state)
         dpg.configure_item(self.pie_state_region, 
                            values=region_contribution_to_state,
                            labels=self.zips_for_region)
@@ -530,9 +530,9 @@ class SaapPortal(GenericContainerContext):
         self.transaction_value_per_type_given_state_strings = [value[0] for value in self.connection[self.tag][query][1:]]
         self.transaction_value_per_type_given_state = [value[1] for value in self.connection[self.tag][query][1:]]
 
-        print(self.transaction_value_per_type_given_state)
-        print("")
-        print(self.transaction_value_per_type_given_state_strings)
+        #print(self.transaction_value_per_type_given_state)
+        #print("")
+        #print(self.transaction_value_per_type_given_state_strings)
 
         dpg.configure_item(self.piechart_state_data,
                         values=self.transaction_value_per_type_given_state, 
@@ -614,8 +614,8 @@ class SaapPortal(GenericContainerContext):
             zipcode_transaction_value_average.insert(index, row[3])
 
 
-        print(high, high_index)
-        print(low, low_index)
+        #print(high, high_index)
+        #print(low, low_index)
         dpg.configure_item(group_text[1], default_value=f"{user_data}'s transaction volume yearly low was ${low:,}.")
         dpg.configure_item(group_text[3], default_value=f"{user_data}'s transaction volume yearly high was ${high:,}.")
         dpg.configure_item(group_text[5], default_value=f"The Top 3 branches responsible for handeling transactions in {user_data} are:")
@@ -675,7 +675,7 @@ class SaapPortal(GenericContainerContext):
                            x=self.state_vs_total_transactions_x,
                            y=zipcode_transaction_value)
         
-        print(zipcode_transaction_value)
+        #(zipcode_transaction_value)
         dpg.set_axis_limits(self.plot_y_axis_zip_timeseries,
                             min(zipcode_transaction_value) * 0.99,
                             max(zipcode_transaction_value) * 1.099)
