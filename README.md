@@ -1,8 +1,7 @@
-# Per Scholas Data Engineering Bootcamp Capstone Project 
+git # Per Scholas Data Engineering Bootcamp Capstone Project 
 <br><br>
 
 👉🏻 For Current and Future Update plans, click [here](#further-considerations-and-future-updates) <br>
-👉🏻 For a Roadmap on what I'm currently working on, click [here](Roadmap.md)
 
 ## Introduction:
 
@@ -70,8 +69,8 @@ An End-to-End ETL Pipeline was built with the purpose of Extracting data from th
 <br>
 
 **Technologies Used:** <br>
-Languages: `Python` `SQL` <br>
-Major Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy`
+Languages: `Python` `SQL` `Batch`<br>
+Major Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy` `dearpygui`
 
 <br><br>
 ### Front-End Interface
@@ -106,38 +105,3 @@ Major Python Libraries: `pandas` `matplotlib`
 ## Further Considerations and Future Updates
 While I satisfied all of the requirements to land a perfect score on my capstone project grade, I want to take the liberty of really fleshing out this project and updating it to make it the best it can possibly be. 
 
-- I've been experimenting with ETL techniques and plan on cleaning up the ETL jupyter notebook.
-- The Terminal Application functionally *works* but  it definitely needs to be refactored into cleaner code. Its just a proof of concept for now.
-- I plan on fleshing out and adding much more aesthetically pleasing graphs with matplotlib/seaborn and I'm also experimenting with tableau visualizations, which I will eventually link to the repo.
-
-| Satus  | Meaning | 
-| ------ | --------|
-| 🛠     | In-Progress|
-|↗       | Up-Next     |
-
-This is just a birds-eye view. For a more granular look into progress check out my [Roadmap](Roadmap.md)
-
-ETL
-- [X] ✅ Create the SQL database through mysql.connector instead of pyspark.sql, allowing for more precise data types 
-- [X] ✅ Rewrite all jupyter notebooks code, making  the pyspark.sql ETL process easier to read and more efficient 
-- [ ] Copy MariaDB SQL database to a SQLite serverless database so users can view the finished product and interact with the front-ends with less work
-- [ ] Compare the speeds of running pyspark.sql locally (using a single node) for the full ETL process with running pandas and discuss the appropriate use of each tool
-- [ ] introduce the <a href="https://github.com/pola-rs/polars">Polars</a> library and further discuss speeds
-
-Front-End
-
-- [ ] GUI 
-  - [ ] 🛠 Make a desktop GUI application that can interact with the server and produce graphs based on user input
-    - [ ] Compile to .EXE
-  - [ ] Consider building a web-app to emulate the same functionality 
-
-Data Visualization
-- [ ] Introduce extended graphing functionality and the ability to save rendered graphs created from the GUI
-- [ ] Introduce a few Tableau graphs with Tableau Public
-
-
-Documentation and Packaging
-- [ ] Update README with todo tasks
-- [ ] Include documentation for each component on a seperate markdown file
-  - [ ] Update README to link included documentation
-- [ ] Clean up all documentation
