@@ -1,5 +1,7 @@
 import dearpygui.dearpygui as dpg
 from Components import *
+import os
+import sys
 #from ConnectionHandler.connection_class import ConnectionHandler
 
 
@@ -17,6 +19,18 @@ if __name__ == "__main__":
     except Exception:
         db_user = ''
         db_password = ''
+
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+# pyinstaller looks for meipass when pulling in external files, 
+# instead of the local path w.r.t main .py file. 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 connection = None
@@ -62,8 +76,8 @@ dpg.setup_dearpygui()
 dpg.create_viewport(title='Data Explorer', width=2000, height=1200)
 
 with dpg.font_registry():
-    inter_regular_18 = dpg.add_font('Font/Inter/Inter.ttf', 18)
-    inter_regular_15 = dpg.add_font('Font/Inter/Inter.ttf', 15)
+    inter_regular_18 = dpg.add_font(resource_path('Resources/Font/Inter.ttf'), 18)
+    inter_regular_15 = dpg.add_font(resource_path('Resources/Font/Inter.ttf'), 15)
 
 
 
@@ -79,8 +93,8 @@ with dpg.viewport_menu_bar():
     saap_window.window()
     customer_window.window()
 
-dpg.set_viewport_large_icon('Components/img/icon.ico')
-dpg.set_viewport_small_icon('Components/img/icon.ico')
+dpg.set_viewport_large_icon(resource_path('Resources/Img/icon.ico'))
+dpg.set_viewport_small_icon(resource_path('Resources/Img/icon.ico'))
 
 # THEMES # 
 with dpg.theme() as global_theme:
