@@ -1,4 +1,4 @@
-git # Per Scholas Data Engineering Bootcamp Capstone Project 
+# Per Scholas Data Engineering Bootcamp Capstone Project 
 <br><br>
 
 👉🏻 For Current and Future Update plans, click [here](#further-considerations-and-future-updates) <br>
@@ -6,7 +6,7 @@ git # Per Scholas Data Engineering Bootcamp Capstone Project
 ## Introduction:
 
 
-This Capstone Project is the culmination of my 17-week long Data Engineering bootcamp at Per Scholas, graciously powered by TEKSystems. 
+This Capstone Project was the culmination of my 17-week long Data Engineering bootcamp at Per Scholas.
 
 It highlights many of the skills and technologies I've known previously and have managed to sharpen, as well as new skills and technologies I've learned along the way. 
 
@@ -104,4 +104,4 @@ Major Python Libraries: `pandas` `matplotlib`
 <br><br>
 ## Further Considerations and Future Updates
 While I satisfied all of the requirements to land a perfect score on my capstone project grade, I want to take the liberty of really fleshing out this project and updating it to make it the best it can possibly be. 
-
+I'm cleaning up the repo and will provide more details later
