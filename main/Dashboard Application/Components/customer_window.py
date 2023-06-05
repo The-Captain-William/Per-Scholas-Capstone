@@ -315,7 +315,7 @@ class CustomerPortal(GenericContainerContext):
 
     def window(self):
         
-        with dpg.window(label='Customer Menu', width=1506, height=975, tag=self.tag):
+        with dpg.window(label='Customer Menu', width=1506, height=975, tag=self.tag, show=False):
 
             with dpg.tab_bar():
 
