@@ -2,7 +2,6 @@ import dearpygui.dearpygui as dpg
 from Components import *
 import os
 import sys
-#from ConnectionHandler.connection_class import ConnectionHandler
 
 
 # TODO:
@@ -34,39 +33,49 @@ customer_window = CustomerPortal('Customer Portal')
 
 if __name__ == "__main__":
     try:
-        print(os.environ)
         db_user = os.getenv('DB_USER_AWS')
         db_password = os.getenv('DB_PASSWORD_AWS')
         db_login = "db-capstone-instance.cxox3tppemvv.us-east-2.rds.amazonaws.com" 
     except Exception as e:
-        print(e)
-
+        pass
 
 
 # global event handler, create a connection 
-def event_handler():
-    try:
-        login_window.grab_credentials()
-        global connection
-        connection = ConnectionHandler(
-                pool_name='DataExplorer',
-                host=login_window.login_address,
-                user=login_window.login_user,
-                password=login_window.login_password,
-                )
+def event_handler(sender, a):
+    global connection
+    if sender == login_window.logout_button:
+        close(connection)
+        login_window.confirm_login_status('Logged out.', logged_in=False)
         
-        login_window.confirm_login(True)
-        query_window.setup(connection)
-        saap_window.setup(connection)
-        customer_window.setup(connection)
-        dpg.configure_item(viewport_query_button, enabled=True)
+    elif sender == login_window.login_button:
+        try:
+            login_window.grab_credentials()
+            connection = ConnectionHandler(
+                    pool_name='DataExplorer',
+                    host=login_window.login_address,
+                    user=login_window.login_user,
+                    password=login_window.login_password,
+                    )
+            
+            login_window.confirm_login_status('Logged in!', logged_in=True)
+            query_window.setup(connection)
+            saap_window.setup(connection)
+            customer_window.setup(connection)
+            dpg.configure_item(viewport_query_button, enabled=True)
 
-    except DBError as e:
-        with dpg.window(label='Error'):
-            dpg.add_text(f"Error, {e}")
-            dpg.add_button(label='close', callback= lambda: dpg.configure_item(dpg.last_container(), show=False))
-            login_window.confirm_login(False)
-            dpg.configure_item(viewport_query_button, enabled=False)
+        except DBError as e:
+            with dpg.window(label='Error'):
+                dpg.add_text(f"Error, {e}")
+                dpg.add_button(label='close', callback= lambda: dpg.configure_item(dpg.last_container(), show=False))
+                login_window.confirm_login_status('', logged_in=False)
+                dpg.configure_item(viewport_query_button, enabled=False)
+
+# close a connection if availible
+def close(connection: ConnectionHandler):
+    try:
+        connection.close_connection()
+    except AttributeError:
+        pass
 
 
 
@@ -95,7 +104,6 @@ with dpg.viewport_menu_bar():
 
 dpg.set_viewport_large_icon(resource_path('Resources/Img/icon.ico'))
 dpg.set_viewport_small_icon(resource_path('Resources/Img/icon.ico'))
-dpg.show_item_registry()
 
 # THEMES # 
 with dpg.theme() as global_theme:
@@ -232,14 +240,6 @@ dpg.bind_item_theme(saap_window.plot_state_vs_company_transactions_2, theme=hist
 dpg.show_viewport()
 dpg.start_dearpygui()
 dpg.destroy_context()
-
-
-def close(connection: ConnectionHandler):
-    try:
-        connection.close_connection()
-    except AttributeError:
-        pass
-
 
 
 
