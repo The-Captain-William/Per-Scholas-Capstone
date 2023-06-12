@@ -63,7 +63,8 @@ class CustomerPortal(GenericContainerContext):
             MONTH(timeid) AS `Month`, ROUND(SUM(transaction_value), 2) AS `Transaction Volume Per Month`
             FROM saap_customer_report
             WHERE cust_id = {user_data}
-            GROUP BY `Month`;
+            GROUP BY `Month`
+            ORDER BY `Month`;
         """
 
         dpg.delete_item(self.report_group, children_only=True)
@@ -394,7 +395,7 @@ class CustomerPortal(GenericContainerContext):
                         
                         dpg.bind_item_handler_registry(radio, switched_modes)
 
-
+                    # table that populates
                     with dpg.child_window(border=False) as customer_table_window:
                         with dpg.table(header_row=True, policy=dpg.mvTable_SizingFixedFit, row_background=True, reorderable=True,
                                     resizable=True, no_host_extendX=True, hideable=True, borders_innerV=True, delay_search=True,
