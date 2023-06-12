@@ -25,7 +25,7 @@ class QueryPortal(GenericContainerContext):
                 # writing row for row in in [contents]
 
 
-        with dpg.window():
+        with dpg.window(pos=dpg.get_mouse_pos(local=False)):
             dpg.add_text(f"File {app_data['file_name']} Saved")
             dpg.add_button(label='ok', callback=lambda:dpg.configure_item(dpg.last_container(), show=False))
         
