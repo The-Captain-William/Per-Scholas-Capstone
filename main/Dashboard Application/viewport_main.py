@@ -11,14 +11,6 @@ import sys
 # graphs
 
 
-if __name__ == "__main__":
-    try:
-        from os import getenv
-        db_user = getenv('DB_USER')
-        db_password = getenv('DB_PASSWORD')
-    except Exception:
-        db_user = ''
-        db_password = ''
 
 
 # https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
@@ -40,11 +32,21 @@ query_window = QueryPortal('query window')
 saap_window = SaapPortal('Saap Portal')
 customer_window = CustomerPortal('Customer Portal')
 
+if __name__ == "__main__":
+    try:
+        print(os.environ)
+        db_user = os.getenv('DB_USER_AWS')
+        db_password = os.getenv('DB_PASSWORD_AWS')
+        db_login = "db-capstone-instance.cxox3tppemvv.us-east-2.rds.amazonaws.com" 
+    except Exception as e:
+        print(e)
+
+
+
 # global event handler, create a connection 
 def event_handler():
     try:
         login_window.grab_credentials()
-        
         global connection
         connection = ConnectionHandler(
                 pool_name='DataExplorer',
@@ -52,13 +54,11 @@ def event_handler():
                 user=login_window.login_user,
                 password=login_window.login_password,
                 )
+        
         login_window.confirm_login(True)
-
         query_window.setup(connection)
         saap_window.setup(connection)
         customer_window.setup(connection)
-        
-
         dpg.configure_item(viewport_query_button, enabled=True)
 
     except DBError as e:
@@ -83,7 +83,7 @@ with dpg.font_registry():
 
 with dpg.viewport_menu_bar():
     with dpg.group(horizontal=True, horizontal_spacing=10):
-        login_window.window(default_login=db_user, default_pass=db_password, external_callback=event_handler)
+        login_window.window(default_login=db_user, default_pass=db_password, default_address=db_login, external_callback=event_handler)
         
         viewport_query_button = dpg.add_menu_item(label='Query Portal', callback=query_window.toggle)
         vieport_saap_button = dpg.add_menu_item(label='Business Analytics Dashboard', callback=saap_window.toggle)
