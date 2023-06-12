@@ -201,6 +201,7 @@ class SaapPortal(GenericContainerContext):
                 GROUP BY `Month`
                 ) t 
                 USING(`Month`)
+                ORDER BY `MONTH`, `Day`
         """
 
         self.connection.cur_execute(self.tag, query, database='db_capstone')
@@ -223,9 +224,9 @@ class SaapPortal(GenericContainerContext):
         low, high = capture_min_max(self.value_per_day, 28, 12)
 
         
-        x_axis = dpg.add_plot_axis(dpg.mvXAxis, parent=self.candle_company_plot, label='Month')
+        x_axis = dpg.add_plot_axis(dpg.mvXAxis, parent=self.candle_company_plot, label='Monthly Candlestick Openings and Closings')
         dpg.set_axis_limits(dpg.last_item(), 0.5, 13)
-        y_axis = dpg.add_plot_axis(dpg.mvYAxis, parent=self.candle_company_plot, label='Monthly Candlestick')
+        y_axis = dpg.add_plot_axis(dpg.mvYAxis, parent=self.candle_company_plot)
         #dpg.set_axis_limits(dpg.last_item(), min(low) * 0.99, max(high) * 1.099)
         dpg.add_plot_legend(parent=self.candle_company_plot)
         dpg.add_candle_series(parent=y_axis,
@@ -760,7 +761,7 @@ class SaapPortal(GenericContainerContext):
                                             pass
                                     
                                     with dpg.child_window(border=False, show=False, width=745, height=400, indent=0) as self.granular_window:
-                                        with dpg.plot(height=400, width=745, equal_aspects=True, anti_aliased=True) as self.candle_company_plot_granular:
+                                        with dpg.plot(height=400, width=745, equal_aspects=True, anti_aliased=True, no_mouse_pos=True) as self.candle_company_plot_granular:
                                             self.granular_x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Day')                                                
                                             self.granular_y_axis = dpg.add_plot_axis(dpg.mvYAxis, label='Total Transaction Volume per Day (Thousands)')
                                             
