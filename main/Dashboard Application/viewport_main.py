@@ -95,7 +95,6 @@ with dpg.viewport_menu_bar():
 
 dpg.set_viewport_large_icon(resource_path('Resources/Img/icon.ico'))
 dpg.set_viewport_small_icon(resource_path('Resources/Img/icon.ico'))
-dpg.show_item_registry()
 
 # THEMES # 
 with dpg.theme() as global_theme:
