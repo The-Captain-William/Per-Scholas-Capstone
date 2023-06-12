@@ -356,7 +356,8 @@ class SaapPortal(GenericContainerContext):
             FROM saap_portal_breakdown
             WHERE cust_state = '{user_data}'
             GROUP BY Month) s 
-            ON t.Month = s.Month;
+            ON t.Month = s.Month
+        ORDER BY Month;
         """
         self.connection.cur_execute(self.tag, query_state_transaction_value, database='db_capstone')
 
@@ -449,7 +450,7 @@ class SaapPortal(GenericContainerContext):
             sum of all state revenue (select subquery),
             grouped by zip (to divide sum of all transaction values) *
             NOTE: 
-            The only reason why I have this custom table is so I can have formatted tables on the outside, and perform a percentage per zip operation on these aggrigations
+            The only reason why I have this custom table is so I can have formatted tables on the outside, and perform a percentage per zip operation on these aggregations
             */
             (SELECT
                 cust_state AS `State`,
@@ -570,7 +571,7 @@ class SaapPortal(GenericContainerContext):
 
         region_branch_info = f"""
         -- count/branch, branch code, address, total per branch
-            SELECT  branch_code, 
+        SELECT  branch_code, 
             COUNT(transaction_id) `Count per branch`, 
             CONCAT(branch_street, ', ',branch_city, ', ', branch_state) AS `Address`,  
             ROUND(SUM(transaction_value), 2)`Total per branch`
