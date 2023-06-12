@@ -316,7 +316,7 @@ class CustomerPortal(GenericContainerContext):
 
     def window(self):
         
-        with dpg.window(label='Customer Menu', width=1506, height=975, tag=self.tag, show=False):
+        with dpg.window(label='Customer Menu', width=1711, height=975, tag=self.tag, show=False):
 
             with dpg.tab_bar():
 
@@ -367,8 +367,8 @@ class CustomerPortal(GenericContainerContext):
                                     pass
                             
                             # leftmost side
-                            with dpg.child_window(width=815, height=450):
-                                with dpg.plot(label='Customer 2018 Transaction History', width=800, anti_aliased=True) as self.single_customer_transaction_volume_plot:
+                            with dpg.child_window(width=1020, height=450):
+                                with dpg.plot(label='Customer 2018 Transaction History', width=1000, anti_aliased=True) as self.single_customer_transaction_volume_plot:
                                     x_axis = dpg.add_plot_axis(dpg.mvXAxis, label='Month')
                                     y_axis = dpg.add_plot_axis(dpg.mvYAxis, label='Transaction Amount per Month (USD)')
                                 

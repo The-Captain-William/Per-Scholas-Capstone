@@ -738,7 +738,7 @@ class SaapPortal(GenericContainerContext):
 
     # main window
 
-        with dpg.window(label='Business Analytics', width=1472, height=1051, tag=self.tag, show=False):
+        with dpg.window(label='Business Analytics', width=1497, height=1098, tag=self.tag, show=False):
             with dpg.tab_bar():
 
                                                                     
