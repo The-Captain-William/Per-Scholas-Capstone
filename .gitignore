@@ -2,6 +2,7 @@
 *.crc
 *.pyc
 *.SPEC
+*.cpython
 _SUCCESS
 PASSWORD.py
 super_secret_password.py
