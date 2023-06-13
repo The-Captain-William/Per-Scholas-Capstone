@@ -64,9 +64,9 @@ def event_handler(sender, a):
             dpg.configure_item(viewport_query_button, enabled=True)
 
         except DBError as e:
-            with dpg.window(label='Error'):
+            with dpg.window(label='Error', pos=dpg.get_mouse_pos(local=False)) as error_window:
                 dpg.add_text(f"Error, {e}")
-                dpg.add_button(label='close', callback= lambda: dpg.configure_item(dpg.last_container(), show=False))
+                dpg.add_button(label='close', callback= lambda: dpg.configure_item(error_window, show=False))
                 login_window.confirm_login_status('', logged_in=False)
                 dpg.configure_item(viewport_query_button, enabled=False)
 

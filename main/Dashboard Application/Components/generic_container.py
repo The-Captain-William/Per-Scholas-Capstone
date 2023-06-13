@@ -50,9 +50,9 @@ class GenericContainerContext:
 
 
     def _connection_error(self, e):
-        with dpg.window(label='Error'):
+        with dpg.window(label='Error', pos=dpg.get_mouse_pos(local=False)) as db_error_window:
             dpg.add_text(f"Error, {e}")
-            dpg.add_button(label='close', callback= lambda: dpg.configure_item(dpg.last_container(), show=False))
+            dpg.add_button(label='close', callback= lambda: dpg.configure_item(db_error_window, show=False))
 
     # dropdown filter
     def _create_dropdown_filter(self, collection: list, parent_window: str | int, callback: Optional[FunctionType] = None):
