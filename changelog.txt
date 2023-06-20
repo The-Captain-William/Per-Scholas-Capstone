@@ -1,0 +1,130 @@
+919596a updated requirements
+5790051 add extensions to .gitignore
+1ca74c9 fixed SQL error window closed button not firing properly
+e38f45e fixed 'file saved' conformation window position.
+eaae43d Merge branch 'linegraph_hotfix'
+b18c4e3 added logout button and imrpoved connection handeling
+a96c2ee removed dev test window
+a362ae3 adjusted customer and dashboard window lengths, adjust customer plot length
+cf5a4d1 fixed time order data for candlestick and granular view
+e5e5632 fixed analytic linecraphs not showing months correctly
+53d59d8 fixed query for customer_window.py
+4950fd6 patched issue with automated login
+6470926 included files to set up a SQL Database with clean data
+e7d5d17 fixed typo
+d75a7f7 removed un-necessary docs, will update later
+41eafe1 Turned off debug print statements
+28ab13e turned dashboards off by default
+de94028 consolidated external files into a single folder; added function to help compiled code know where to look
+e0af0ab added icon
+441c14a Merge branch 'main' of https://github.com/The-Captain-William/Per-Scholas-Capstone
+39db1e1 cleaning up for release
+e78be0f removed old compiled files
+2fbfa64 deleted old compiled files
+6d5fe43 renamed viewport
+300b6c2 completed sql query window aesthetics
+a7fcd23 completed analytics window
+9d6a66a moved themes to main
+0b5b37e updated granular customer graphs, improved fonts
+4deb7cf turned off debug for customer window, updated theme for app
+dc784d9 customer window is production ready
+d423e86 major performance increases, bug fixes, QOL improvements
+e797e60 removed old files from test enviornment
+5c6d93b refactored into seperate files
+8c98391 added candlestick
+7b190bd Refactored State/Region Window
+b1815fc fixed bug where a connection would instantiate as a regular connection and not a dictionary connection
+8c66e92 fixed lookup error and optimized customer search
+6de04b8 added edit and report mode radio button
+ef83244 fixed issue with static string and customer table
+d0aac01 editing and commiting to server running
+97f2d0e functional client selection added
+fd66ce3 added timeseries data for region and table, will refactor later
+e573130 added bar graphs to region window
+9867b4f Install the CodeSee workflow. Learn more at https://docs.codesee.io
+258dedf Advanced queries for state vs company dashboard. Shaping dashboard
+80935b7 added python arrays, set up pipeline for SaaS Trans Table 1. Will check out numpy arrays later
+7c545b9 moved more functions to generic class, added zipcode query functionaltity
+57d6d25 deleted old tests
+a1cb665 updated connection, working on bug fix
+05245f3 refined classes and slimmed down login handler
+97cf720 fleshing out SaaP viewport, added states and zips
+aaa2e87 added refresh and export as view. Almost done with version 1.0!!!
+0b0186c class based viewport, optimized
+0a1ba19 added save to csv functionality
+b1c1a2d added sql-save functionality
+dadb9c7 building out the actual final product
+e0aa9a8 created generic window class and starting login refactor
+50df5ed refined connection class w/ pooling inheritance from mysql.connector pooling class
+5fb4ba8 added pop feature to connection class
+9c52209 completed and refined class
+ee3461b made a class to interact with gui
+b0e65a8 experimenting with classes
+888d47a attached checkbox to dashboard plot 1
+973149d moved checkbox dropdown to a seperate file, experimenting w/ states
+9731c6f added selection, disabling
+5935414 added gui filter functionality and mysql test workbench
+ee7e53f Update README.md
+94045dc Update README.md
+a68dfd3 Create Roadmap.md
+ea9e4e4 Update README.md
+de4b397 removed obsolete login
+e66220c set up ability to query and view, still needs adjustments to gui and code refactoring
+3fff3df added SQL browser window, enhanced server browser w/ scrollable window
+a3f297a extended functionality for db selector
+6c4f15f first iteration of DB explorer, added refresh
+dc745d5 0.0.1 added rudimentary login functionality frame
+ac21ae8 Update README.md
+5658598 clarification for optimizations in ETL
+ce21949 fixed typos for ETL_2
+cdc39f8 deleted old notebook
+28703ca Update README.md
+5057056 Update README.md
+778f522 Update README.md
+3004843 Merge branch 'development'
+16fe71c renamed ETL notebooks
+2f4a5cd finished ETL
+694eecb completed trans of cust_df
+53c5e54 Merge branch 'main' of https://github.com/The-Captain-William/Per-Scholas-Capstone
+f6ecbd9 fixed div
+f9015a6 transforming notebook update, including images as well
+a1c32ca updated ETL, schema check
+25bb36a cleaned up .JSON and API to DF, introduced API to DF func
+761bca5 Update README.md
+fb04b2c breaking up notebooks, made ETL_1, Making DB
+e3d1bd1 Update README.md
+3acd911 cleaned
+5c0d332 Merge branch 'development'
+460fa86 Update README.md
+55b53b4 added images dir and db physical model
+08adbfb added code to create much more sensible tables through mysql.connector
+964ad03 cleaner ETL
+a994edb Completed Graphs and Added Images
+5a490f5 Create README.md
+ce14556 updated quirements.txt
+79618a9 basic terminal concept, ETL, Data Viz
+5b2ad46 cleaned up main by removing testing folder
+a870c20 main initial commit
+5ebdf19 CLI 0.0.8 Rudimentary CLI Up and running
+ad08ccb CLI 0.0.7 80% done with CLI
+f5921c6 CLI 0.0.6 moved to classes
+bbf40c3 CLI 0.0.5 Much Improved Interface
+34d251c CLI 0.0.4 Burning the midnight oil to get this done
+66225e0 CLI 0.0.3 working on formatting db table for CLI
+682c625 CLI 0.0.2, 25% complete w/ framework
+ce91752 CLI 0.0.1 - starting to test functionality
+2c73917 ETL 0.0.7 bug-fix with dates in TIMEID
+54a1d89 ETL 0.0.6 Experiment w/ moving to SQL, need more accurate Dtypes
+90cf251 ETL 0.0.5 Added refined JSON for credit
+f0aa2f6 ETL 0.0.4 ETL on last local JSON
+60ccdda ETL 0.0.3 developed phone number func
+9f37851 Extract 0.0.3 Extracted local branch JSON
+07d1ace ETL 0.0.2 deleted file in wrong dir
+6a0e668 ETL 0.0.1 ETL on cust to JSON
+d8a9f82 Load 0.0.1 Experimented w/ loading to JSON
+92676c2 Transform 0.0.2 Transform customer complete
+89f8eae Transform 0.0.1 Transformed Customer DataTypes
+03fcbe6 Extract 0.0.2 Extracted local JSON w/ pyspark.sql
+511bc14 Extract 0.0.1 Testing Extraction Technqiues
+ebdd5a1 Extract 0.0.1, added requirements
+fc78aee initial commit
