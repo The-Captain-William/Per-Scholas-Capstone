@@ -49480,7 +49480,7 @@ SET character_set_client = @saved_cs_client;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=CURRENT_USER SQL SECURITY DEFINER */
 /*!50001 VIEW `saap_customer_report` AS select `cdw_sapp_customer`.`cust_id` AS `cust_id`,`cdw_sapp_customer`.`first_name` AS `first_name`,`cdw_sapp_customer`.`middle_name` AS `middle_name`,`cdw_sapp_customer`.`last_name` AS `last_name`,`cdw_sapp_customer`.`full_street_address` AS `full_street_address`,`cdw_sapp_customer`.`cust_city` AS `cust_city`,`cdw_sapp_customer`.`cust_state` AS `cust_state`,`cdw_sapp_customer`.`cust_zip` AS `cust_phone`,`cdw_sapp_customer`.`cust_email` AS `cust_email`,`cdw_sapp_credit_card`.`transaction_type` AS `transaction_type`,`cdw_sapp_credit_card`.`transaction_value` AS `transaction_value`,`cdw_sapp_credit_card`.`transaction_id` AS `transaction_id`,`cdw_sapp_branch`.`branch_street` AS `branch_street`,`cdw_sapp_branch`.`branch_city` AS `branch_city`,`cdw_sapp_branch`.`branch_state` AS `branch_state`,`cdw_sapp_branch`.`branch_zip` AS `branch_zip`,`cdw_sapp_branch`.`branch_phone` AS `branch_phone`,`cdw_sapp_credit_card`.`branch_code` AS `branch_code`,`cdw_sapp_credit_card`.`timeid` AS `timeid` from ((`cdw_sapp_customer` left join `cdw_sapp_credit_card` on(`cdw_sapp_customer`.`ssn` = `cdw_sapp_credit_card`.`cust_ssn`)) left join `cdw_sapp_branch` on(`cdw_sapp_credit_card`.`branch_code` = `cdw_sapp_branch`.`branch_code`)) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -49498,7 +49498,7 @@ SET character_set_client = @saved_cs_client;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=CURRENT_USER SQL SECURITY DEFINER */
 /*!50001 VIEW `saap_portal_breakdown` AS select `cdw_sapp_credit_card`.`timeid` AS `timeid`,`cdw_sapp_credit_card`.`transaction_type` AS `transaction_type`,`cdw_sapp_credit_card`.`transaction_value` AS `transaction_value`,`cdw_sapp_customer`.`cust_state` AS `cust_state`,`cdw_sapp_customer`.`cust_zip` AS `cust_zip` from (`cdw_sapp_credit_card` join `cdw_sapp_customer` on(`cdw_sapp_credit_card`.`cust_ssn` = `cdw_sapp_customer`.`ssn`)) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -49516,7 +49516,7 @@ SET character_set_client = @saved_cs_client;
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=CURRENT_USER SQL SECURITY DEFINER */
 /*!50001 VIEW `saap_state_zip_breakdown` AS select `saap_portal_breakdown`.`cust_state` AS `State`,`saap_portal_breakdown`.`cust_zip` AS `Zip`,`z`.`Total Per Zip` AS `Total Per Zip`,`m`.`Total Per Month Per Zip` AS `Total Per Month Per Zip`,`m`.`Month` AS `Month`,`s`.`Total per State` AS `Total per State`,truncate(round(`z`.`Total Per Zip` / `s`.`Total per State`,4) * 100,2) AS `Percent of Zip to State` from (((`saap_portal_breakdown` join (select round(sum(`saap_portal_breakdown`.`transaction_value`),2) AS `Total Per Zip`,`saap_portal_breakdown`.`cust_zip` AS `cust_zip` from `saap_portal_breakdown` group by `saap_portal_breakdown`.`cust_zip`) `z` on(`saap_portal_breakdown`.`cust_zip` = `z`.`cust_zip`)) join (select round(sum(`saap_portal_breakdown`.`transaction_value`),2) AS `Total Per Month Per Zip`,`saap_portal_breakdown`.`cust_zip` AS `cust_zip`,month(`saap_portal_breakdown`.`timeid`) AS `Month` from `saap_portal_breakdown` group by `saap_portal_breakdown`.`cust_zip`,month(`saap_portal_breakdown`.`timeid`)) `m` on(`saap_portal_breakdown`.`cust_zip` = `m`.`cust_zip`)) join (select round(sum(`saap_portal_breakdown`.`transaction_value`),2) AS `Total per State`,`saap_portal_breakdown`.`cust_state` AS `cust_state` from `saap_portal_breakdown` group by `saap_portal_breakdown`.`cust_state`) `s` on(`saap_portal_breakdown`.`cust_state` = `s`.`cust_state`)) group by `saap_portal_breakdown`.`cust_state`,`saap_portal_breakdown`.`cust_zip`,`m`.`Month` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
