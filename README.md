@@ -1,107 +1,46 @@
-# Per Scholas Data Engineering Bootcamp Capstone Project 
-<br><br>
+# ETL Pipeline with Apache PySpark and Front End App with DearPyGui
 
-👉🏻 For Current and Future Update plans, click [here](#further-considerations-and-future-updates) <br>
+This Capstone Project was made during a Data Engineering Bootcamp I attended at Per Scholas.
 
-## Introduction:
+![Entire Process](./main/ETL%20Process/Jupyter%20Notebook/images/ETL%20Process.png)
 
 
-This Capstone Project was the culmination of my 17-week long Data Engineering bootcamp at Per Scholas.
 
-It highlights many of the skills and technologies I've known previously and have managed to sharpen, as well as new skills and technologies I've learned along the way. 
+The main objective of this project was to develop an ETL (Extract, Transform, Load) pipeline using Apache PySpark and Jupyter Notebook. The pipeline extracts data from various JSON files and an API, performs necessary transformations, and loads the data into a local database. Additionally, I went beyond the initial requirements and implemented several optimizations, hosted the database on Amazon AWS, and created a user-friendly data analytics dashboard.
 
-### The Data Set & Workflow:
----
-The Data-set is generated data representing that of a bank. <br>
-The data consists of several large .JSON Files, and an API endpoint. <br> 
-The data represents customer information, branch information, transaction history, as well as data pertaining to individuals applying for bank loans.
+To explore the project and download the data analytics dashboard, [please visit the project's release page](https://github.com/The-Captain-William/Per-Scholas-Capstone/releases/tag/v1.3). The database is live and accessible, and detailed instructions can be found in the provided link.
 
-<div align="center">
-<img src="https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/main/images/capstone_workflow_process.jpg" width=720px>
-</div>
+Please note that this README provides a summary of the project. For detailed information and code implementation, please refer to the respective sections and files in the repository.
+
+Feel free to explore the project, and if you have any questions or feedback, please don't hesitate to reach out!
   
-### The Project Components:
+### Project Steps:
 ---
-The capstone is divided into several components: 
 
-<br><br>
+#### 1. Building the Database
+- The database was built with Jupyter Notebook and MySQL.connector using appropriate datatypes.
+- The database was then hosted using Amazon AWS services.
+- [Click this link](https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL%20Process/Jupyter%20Notebook/ETL_Part_1_building_the_database.ipynb) to be taken to the Database Creation section of the repository. 
 
-<div align="center">
-<table>
-<th colspan="3"> <h2>Components</h2> </th>
+#### 2. Extracting, Transforming, and Loading the Data 
+- Using Jupyter Notebook and Apache Spark through PySpark, the data was Extracted, Transformed (and cleaned) and Loaded onto the Database.
+- [Click this link](https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL%20Process/Jupyter%20Notebook/ETL_Part_2_The_ETL_Process.ipynb) to be taken to the ETL section of the repository.
 
-  <tr>  <!-- ETL COLS -->
-    <td>
-    <h3>ETL </h3>
-    </td>
-    <td>
-    <h3>Front End Interface</h3>
-    </td>
-    <td>
-    <h3>Data Visualization</h3>
-    </td>
-  </tr>
-  
-<tr>
-  <td>
-  <p><a href='https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL/ETL_Part_1_building_the_database.ipynb'>Part One:</a><br>Building a SQL Database remotely with mysql.connector</p>
-  <br>
-  <p>
-  <a href='https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL/ETL_Part_2_The_ETL_Process.ipynb'>Part Two:</a><br>My Entire ETL Workflow, including a few tips and tricks
-  </p>
-  </td>
+#### 3. Building a Data Analytics Windows Desktop 
+- Developed a powerful data analytics application called Data Explorer, which can be downloaded and easily installed.
+- The app was built using object-oriented principles, incorporating custom objects and comprehensive testing for edge cases.
+- Implemented a class object around the MySQLConnectionPool to facilitate seamless data flow between the app and the server.
 
-<td>
-<a href='https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/development/images/wip_sql_portal.png'>WIP Front-End User Portal</a>
-</td>
-
-</tr>
-  
-</table>
-</div>
-
-<br>
-
-### ETL
+### The Data Set
 ---
-**Outline:** <br>
-An End-to-End ETL Pipeline was built with the purpose of Extracting data from the large JSON dataset and the API endpoint, Transforming the data appropriately, and Loading the data into a SQL database
-<br>
+- The dataset used in this project consists of synthetic bank data, comprising several large JSON files and an API endpoint.
+- The data encompasses customer information, branch details, transaction history, and loan application records.
+
 
 **Technologies Used:** <br>
 Languages: `Python` `SQL` `Batch`<br>
-Major Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy` `dearpygui`
+Key Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy` `dearpygui` <br>
+Database Hosting: `Amazon AWS RDS`
 
-<br><br>
-### Front-End Interface
----
-**Outline:** <br>
-A User-Friendly Front-End Interface I'm calling the *Data Explorer* is being built to interact with sql servers.
-Using pyspark.sql and mysql.connector, a front end user can view and modify the contents of a SQL Database. 
-The goal is to be able to have two forms of interaction, direct SQL code and abstracted-away SQL queries using nodes with the 
-<a href='https://github.com/hoffstadt/DearPyGui'>DearPyGui</a> library. The user will be able to query, modify, and create graphs and visualizations directly from the Data Explorer. Could be very useful for datamarts.
-<br>
-<img src='https://raw.githubusercontent.com/The-Captain-William/Per-Scholas-Capstone/development/images/wip_sql_portal.png'>
-<br>
 
-**Technologies Used:**<br>
-Languages: `Python` `SQL` <br>
-Major Python Libraries: `pyspark.sql` `mysql.connector` `DearPyGui`
-<br>
 
-<br><br>
-### Data Visualization
----
-**Outline:**<br>
-Data loaded onto the SQL database was queried through pyspark.sql and manipulated through pyspark.sql and Pandas to create datasets used for data visualization using matplotlib. 
-<br>
-
-**Technologies Used:**<br>
-Languages: `Python` <br>
-Major Python Libraries: `pandas` `matplotlib`
-<br>
-
-<br><br>
-## Further Considerations and Future Updates
-While I satisfied all of the requirements to land a perfect score on my capstone project grade, I want to take the liberty of really fleshing out this project and updating it to make it the best it can possibly be. 
-I'm cleaning up the repo and will provide more details later
