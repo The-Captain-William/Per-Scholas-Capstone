@@ -6,7 +6,7 @@ This Capstone Project was made during a Data Engineering Bootcamp I attended at 
 
 
 This is a capstone project from my Data Engineering Bootcamp. <br>
-I built a full-stack solution, from the cleaning of the data, to the creation of a database, to a Windows data analytics application.
+I built a full-stack solution, from the cleaning of the data, to the creation of a database, to a custom-built Windows data analytics application.
 
 The original main objective of this project was to develop an ETL (Extract, Transform, Load) pipeline using Apache PySpark and Jupyter Notebook. The pipeline extracts data from various JSON files and an API, performs necessary transformations, and loads the data into a local database. 
 
