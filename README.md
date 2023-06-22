@@ -5,8 +5,12 @@ This Capstone Project was made during a Data Engineering Bootcamp I attended at 
 ![Entire Process](./main/ETL%20Process/Jupyter%20Notebook/images/ETL%20Process.png)
 
 
+This is a capstone project from my Data Engineering Bootcamp. <br>
+I built a full-stack solution, from the cleaning of the data, to the creation of a database, to a Windows data analytics application.
 
-The main objective of this project was to develop an ETL (Extract, Transform, Load) pipeline using Apache PySpark and Jupyter Notebook. The pipeline extracts data from various JSON files and an API, performs necessary transformations, and loads the data into a local database. Additionally, I went beyond the initial requirements and implemented several optimizations, hosted the database on Amazon AWS, and created a user-friendly data analytics dashboard.
+The original main objective of this project was to develop an ETL (Extract, Transform, Load) pipeline using Apache PySpark and Jupyter Notebook. The pipeline extracts data from various JSON files and an API, performs necessary transformations, and loads the data into a local database. 
+
+However, I went beyond the initial requirements and implemented several optimizations, hosted the database on Amazon AWS, and created a user-friendly data analytics dashboard.
 
 To explore the project and download the data analytics dashboard, [please visit the project's release page](https://github.com/The-Captain-William/Per-Scholas-Capstone/releases/tag/v1.3). The database is live and accessible, and detailed instructions can be found in the provided link.
 
