@@ -17,6 +17,8 @@ To explore the project and download the data analytics dashboard, [please visit 
 Please note that this README provides a summary of the project. For detailed information and code implementation, please refer to the respective sections and files in the repository.
 
 Feel free to explore the project, and if you have any questions or feedback, please don't hesitate to reach out!
+
+NOTE ⚠ I do have a brief video showcasing the app on the release page, but I'm currently working on editing a 20+ minute video that demonstrates the functionality of the app with a voiceover and highlights a few design choices. Stay tuned!
   
 ### Project Steps:
 ---
