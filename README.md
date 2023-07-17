@@ -4,6 +4,14 @@ This Capstone Project was made during a Data Engineering Bootcamp I attended at 
 
 ![Entire Process](./main/ETL%20Process/Jupyter%20Notebook/images/ETL%20Process.png)
 
+<div>
+  <a href="https://youtu.be/p48iFH-Ysb0">
+    <img src="https://clipart.info/images/ccovers/1590430652red-youtube-logo-png-xl.png" width=100px alt="youtube link">  
+    <p>Click to Watch the video!</p>
+  </a>
+</div>
+
+
 
 This is a capstone project from my Data Engineering Bootcamp. <br>
 I built a full-stack solution, from the cleaning of the data, to the creation of a database, to a custom-built Windows data analytics application.
@@ -18,7 +26,6 @@ Please note that this README provides a summary of the project. For detailed inf
 
 Feel free to explore the project, and if you have any questions or feedback, please don't hesitate to reach out!
 
-NOTE ⚠ I do have a brief video showcasing the app on the release page, but I'm currently working on editing a 20+ minute video that demonstrates the functionality of the app with a voiceover and highlights a few design choices. Stay tuned!
   
 ### Project Steps:
 ---
