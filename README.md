@@ -43,10 +43,11 @@ Please note that this README provides a summary of the project. For detailed inf
 Feel free to explore the project, and if you have any questions or feedback, please don't hesitate to reach out!
 
 **Technologies Used:** <br>
-Languages: `Python` `SQL` `Batch`<br>
-Key Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy` `dearpygui` <br>
-Database Hosting: `Amazon AWS RDS`
-
+- Languages: `Python` `SQL` `Batch`
+- Key Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy` `dearpygui` 
+- Database Hosting: `Amazon AWS RDS` 
+- Tools: `Jupyter Notebook` 
+- Testing: `Jupyter Notebook` `Oracle VM VirtualBox`
 
   
 ### Project Steps:
