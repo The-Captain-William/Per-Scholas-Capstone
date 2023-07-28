@@ -26,34 +26,56 @@ Please note that this README provides a summary of the project. For detailed inf
 
 Feel free to explore the project, and if you have any questions or feedback, please don't hesitate to reach out!
 
+**Technologies Used:** <br>
+Languages: `Python` `SQL` `Batch`<br>
+Key Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy` `dearpygui` <br>
+Database Hosting: `Amazon AWS RDS`
+
+
   
 ### Project Steps:
 ---
 
 #### 1. Building the Database
-- The database was built with Jupyter Notebook and MySQL.connector using appropriate datatypes.
+- I designed a data warehouse as a relational database that contains 5 tables and 3 materialized views, employing correct data types.
+- The database was built with MySQL.connector using appropriate datatypes.
 - The database was then hosted using Amazon AWS services.
 - [Click this link](https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL%20Process/Jupyter%20Notebook/ETL_Part_1_building_the_database.ipynb) to be taken to the Database Creation section of the repository. 
 
 #### 2. Extracting, Transforming, and Loading the Data 
-- Using Jupyter Notebook and Apache Spark through PySpark, the data was Extracted, Transformed (and cleaned) and Loaded onto the Database.
+- The dataset used in this project consists of synthetic bank data, comprising several large JSON files and an API endpoint.
+- The data encompasses customer information, branch details, transaction history, and loan application records.
+- Using Jupyter Notebook and Apache Spark through PySpark, the data was Extracted, Transformed, and Loaded onto the Database.
 - [Click this link](https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/main/ETL%20Process/Jupyter%20Notebook/ETL_Part_2_The_ETL_Process.ipynb) to be taken to the ETL section of the repository.
 
 #### 3. Building a Data Analytics Windows Desktop 
-- Developed a powerful data analytics application called Data Explorer, which can be downloaded and easily installed.
-- The app was built using object-oriented principles, incorporating custom objects and comprehensive testing for edge cases.
+- I implemented Object-Oriented Principles (OOP) in Python for desktop app development, creating 6 classes with 4 inheriting from a base class and over 30 methods.
+- I released the application as an executable (EXE), eliminating the need for Python dependencies or interpreter installation (of course, the source code is still available). The setup can be completed in as little as 5 minutes.
 - Implemented a class object around the MySQLConnectionPool to facilitate seamless data flow between the app and the server.
 
-### The Data Set
+
+### Optimizations:
 ---
-- The dataset used in this project consists of synthetic bank data, comprising several large JSON files and an API endpoint.
-- The data encompasses customer information, branch details, transaction history, and loan application records.
+- A lot of what the analytics dashboard pulls from are from complex materialized views on the database that I tested and optimized for faster querying. 
+However, if I wanted to increase performance even more, I could have used numpy a little more liberally and swapped out the default Python arrays for numpy arrays.
 
+- The queries are baked into the objects and therefore baked into the exe, but next time I'll be sure to keep the queries in stored procedures server side along with
+the materialized views for even faster querying and to keep from having to recompile the exe if anything serverside were to ever change.
 
-**Technologies Used:** <br>
-Languages: `Python` `SQL` `Batch`<br>
-Key Python Libraries: `pyspark.sql` `mysql.connector` `requests` `pandas` `numpy` `dearpygui` <br>
-Database Hosting: `Amazon AWS RDS`
+### Lessons Learned:
+---
+- I learned going into the project that the DearPyGui GUI framework is more script-based and not object-oriented based. 
+This made it *extremely* complicated to try to develop a desktop app of this caliber and handle all the data coming in and going out, so I built my own objects
+using components from the framework. Each distinct object is essentially a window in the application, and they are all loosely coupled, with a viewport holding them all together.
+Some windows share similar functions, and those functions are all inherited from a base class. While I enjoyed using the framework, I will make sure to read documentation and code examples *thoroughly*
+before attempting to use them for another project.
+
+- I also built a way to capture and temporarily cache data coming in from the database using hash tables, which is the secret sauce of how I managed to make the customer data appear to be directly editable from the rows as they populate.
+
+### Extras:
+---
+For an example of how I created stored procedures and triggers in PostgreSQL, click <a href='https://github.com/The-Captain-William/stored-procedures-and-triggers-psql'>here</a>
+
 
 
 
