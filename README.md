@@ -1,8 +1,27 @@
-# ETL Pipeline with Apache PySpark and Front End App with DearPyGui
-
-This Capstone Project was made during a Data Engineering Bootcamp I attended at Per Scholas.
+# ETL Pipeline with Apache PySpark and Front End Desktop Application
 
 ![Entire Process](./main/ETL%20Process/Jupyter%20Notebook/images/ETL%20Process.png)
+
+<div>
+<table>
+  <tr>
+    <td>
+    <img src="https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/Screenshot%202023-07-22%20143008.png?raw=true">
+    </td>
+    <td>
+      <img src="https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/Screenshot%202023-07-28%20192240.png?raw=true">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/Screenshot%202023-07-22%20143155.png?raw=true">
+    </td>
+    <td>
+      <img src="https://github.com/The-Captain-William/Per-Scholas-Capstone/blob/main/Screenshot%202023-07-22%20143029.png?raw=true">
+    </td>
+  </tr>
+</table>
+</div>
 
 <div>
   <a href="https://youtu.be/p48iFH-Ysb0">
@@ -11,10 +30,7 @@ This Capstone Project was made during a Data Engineering Bootcamp I attended at 
   </a>
 </div>
 
-
-
-This is a capstone project from my Data Engineering Bootcamp. <br>
-I built a full-stack solution, from the cleaning of the data, to the creation of a database, to a custom-built Windows data analytics application.
+This is a full-stack solution for a bank, from the cleaning of the data to the creation of a database to a custom-built Windows data analytics application.
 
 The original main objective of this project was to develop an ETL (Extract, Transform, Load) pipeline using Apache PySpark and Jupyter Notebook. The pipeline extracts data from various JSON files and an API, performs necessary transformations, and loads the data into a local database. 
 
@@ -74,7 +90,7 @@ before attempting to use them for another project.
 
 ### Extras:
 ---
-For an example of how I created stored procedures and triggers in PostgreSQL, click <a href='https://github.com/The-Captain-William/stored-procedures-and-triggers-psql'>here</a>
+- For an example of how I created stored procedures and triggers in PostgreSQL in another project, click <a href='https://github.com/The-Captain-William/stored-procedures-and-triggers-psql'>here</a>
 
 
 
